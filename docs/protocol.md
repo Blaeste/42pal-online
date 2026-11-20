@@ -1,6 +1,6 @@
 # Protocol of 42pal online
 
-How the 42pal client talks to the 42pal server. The client is this repository; the server is private. This page covers the rules of every request, the login of a terminal and the ranked exam; the snapshots come with phase 4 of the plan (`docs/plans/42pal-online.md`).
+How the 42pal client talks to the 42pal server. The client is this repository; the server is private. This page covers the rules of every request, the login of a terminal, the ranked exam and its snapshots (plan: `docs/plans/42pal-online.md`).
 
 ## Every request
 
@@ -20,6 +20,8 @@ How the 42pal client talks to the 42pal server. The client is this repository; t
 | 409 | `exam_running` | a ranked exam is already in progress: resume it first |
 | 409 | `wait` | a grademe too early, before the wait after a failure is over |
 | 409 | `grading` | the last grademe is still being graded |
+| 409 | `variant` | a snapshot of another subject than the current one |
+| 409 | `snapshot_chain` | a snapshot that does not follow the last one |
 | 410 | `expired` | the pairing is too old, already used, or unknown |
 | 426 | `version` | the client is not the version of the server |
 | 429 | `busy` | too many requests; the message says when to try again |
@@ -125,6 +127,23 @@ Body `{"files": {"<expected file>": "<content>"}, "local_passed": true}`: the fi
 ### `POST /api/v1/exams/current/finish`
 
 Ends the exam now. `200` with its last state (`"ended": true`, the grade).
+
+## Snapshots
+
+While a ranked exam runs, the client sends a snapshot every 10 seconds, and a last one just before `finish`: the files of the subject changed since the last snapshot the server kept, or `{}` when nothing changed (a heartbeat). The server keeps each one with its own time; the anticheat reads them (what appears at once, the gaps).
+
+### `POST /api/v1/exams/current/snapshots`
+
+```json
+{"seq": 12, "previous": "<hash of the last snapshot kept>", "variant": "char_position#3",
+ "files": {"char_position.c": "..."}, "missed": 0}
+```
+
+`previous` is `""` for the first one. `missed` counts the sends that failed since the last one kept: that one carries every change since, so nothing is lost and the gap shows. `201` `{"seq": 12, "hash": "..."}`, the new link of the chain: the hash covers the one before and the content. `409` `snapshot_chain`: ask for the last link and send every file again; `409` `variant`: the subject just changed, the next snapshot will be of the new one; `429` `busy`: one every 3 seconds at most (256 KiB, 2400 per exam).
+
+### `GET /api/v1/exams/current/snapshots/last`
+
+`{"seq": 12, "hash": "..."}`, or `{"seq": 0, "hash": ""}` before the first: a terminal that resumes the exam follows the chain from there.
 
 ## Who may play ranked
 

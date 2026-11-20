@@ -6,7 +6,8 @@ once, then hands it in and shows the server's verdict, which moves the
 exam on: the server's tests include some of a secret seed. The waits, the
 time and the levels are the server's, the cheat menu is off, and nothing
 of the exam is saved here but the traces: the server keeps it, so running
-./42pal ranked again resumes it.
+./42pal ranked again resumes it. Meanwhile, snapshots of the rendu go to
+the server every 10 seconds (pal42/snapshots.py).
 """
 
 import time
@@ -20,6 +21,7 @@ from pal42.cli.shell import BACK, COMMANDS, Shell, terminal
 from pal42.cli.workspace import Workspace
 from pal42.exam import load_exam
 from pal42.session import STATE_DIR
+from pal42.snapshots import INTERVAL, Snapshots
 
 # How often the shell asks whether the server has graded, and for how long.
 POLL_SECONDS = 1
@@ -31,12 +33,14 @@ class RankedShell(Shell):
 	api is the online.Api of the logged-in terminal.
 	"""
 
-	def __init__(self, console, ask, api, workspace=None, clock=time.time, sleep=time.sleep, catalog=None, themes=None):
+	def __init__(self, console, ask, api, workspace=None, clock=time.time, sleep=time.sleep, catalog=None, themes=None,
+			snapshot_interval=INTERVAL):
 		super().__init__(console, ask, None, workspace=workspace, clock=clock, sleep=sleep, mode="exam",
 			catalog=catalog, themes=themes)
 		self.api = api
 		# The last state the server gave: its decisions.
 		self.server_state = None
+		self.snapshots = Snapshots(api, self._read_rendu, snapshot_interval)
 
 	def run(self):
 		"""Resume the exam the server has in progress, or start one; then the commands."""
@@ -58,7 +62,12 @@ class RankedShell(Shell):
 			return
 		self.follow(state)
 		self.show_subject()
-		self.command_loop()
+		self.snapshots.start()
+		try:
+			self.command_loop()
+		finally:
+			# Already stopped at the end of the exam; here for Ctrl-C.
+			self.snapshots.stop()
 
 	def _current(self):
 		"""The state of the exam in progress on the server, or None."""
@@ -111,6 +120,7 @@ class RankedShell(Shell):
 		state = verdict["exam"]
 		self.follow(state)
 		if state["ended"]:
+			self.snapshots.stop()
 			if state["end"] == "passed":
 				self.console.print(display.exam_passed_panel(self.exam))
 			elif state["end"] == "no more levels":
@@ -126,11 +136,7 @@ class RankedShell(Shell):
 
 	def _server_verdict(self, local_passed):
 		"""Hand in the files of the subject, then wait for the server's verdict."""
-		rendu = self.workspace.rendu / self.variant.name
-		files = {}
-		for name in self.variant.expected_files:
-			if (rendu / name).is_file():
-				files[name] = (rendu / name).read_text(encoding="utf-8", errors="replace")
+		_, files = self._read_rendu()
 		_, queued = self.api.request("POST", "/exams/current/grademe", {"files": files, "local_passed": local_passed})
 		with self._status("The server grades…"):
 			for _ in range(POLL_LIMIT_SECONDS // POLL_SECONDS):
@@ -139,6 +145,16 @@ class RankedShell(Shell):
 					return verdict
 				self.sleep(POLL_SECONDS)
 		raise online.OnlineError("The server takes too long to grade: try grademe again later.")
+
+	def _read_rendu(self):
+		"""The current subject and the files of it found in rendu/: (variant id, {name: content})."""
+		variant = self.variant
+		folder = self.workspace.rendu / variant.name
+		files = {}
+		for name in variant.expected_files:
+			if (folder / name).is_file():
+				files[name] = (folder / name).read_text(encoding="utf-8", errors="replace")
+		return variant.id, files
 
 	def _show_verdict(self, local_passed, verdict):
 		if verdict["passed"]:
@@ -153,6 +169,9 @@ class RankedShell(Shell):
 	def end_exam(self, end="finish"):
 		"""End the exam on the server (unless its time is up), then the summary."""
 		state = self.server_state
+		# The rendu as it is at the end goes in a last snapshot, while the
+		# exam is still running on the server.
+		self.snapshots.stop(final=end != "time")
 		if end != "time":
 			try:
 				_, state = self.api.request("POST", "/exams/current/finish")

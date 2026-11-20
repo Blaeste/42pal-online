@@ -46,6 +46,8 @@ class FakeServer(BaseHTTPRequestHandler):
 			if FakeServer.current is None:
 				return self.answer(404, {"error": "no_exam", "message": "No ranked exam in progress."})
 			return self.answer(200, FakeServer.current)
+		if self.path == "/api/v1/exams/current/snapshots/last":
+			return self.answer(200, {"seq": 0, "hash": ""})
 		if self.path == "/api/v1/grademes/1":
 			# Once still running, then the verdict.
 			if not any(path == "/api/v1/grademes/1" for _, path, _ in self.requests[:-1]):
@@ -62,6 +64,9 @@ class FakeServer(BaseHTTPRequestHandler):
 			return self.answer(201, FakeServer.current)
 		if self.path == "/api/v1/exams/current/grademe":
 			return self.answer(202, {"grademe": 1})
+		if self.path == "/api/v1/exams/current/snapshots":
+			count = sum(path == self.path for _, path, _ in self.requests)
+			return self.answer(201, {"seq": count, "hash": f"h{count}"})
 		if self.path == "/api/v1/exams/current/finish":
 			return self.answer(200, state(ended=True, end="finish", seconds=600, attempts=1))
 		self.answer(404, {"error": "unknown", "message": "Unknown."})
@@ -167,6 +172,17 @@ class TestRankedShell(RankedTestCase):
 		self.run_shell("1", "finish")
 		self.assertEqual(len(self.posted("/api/v1/exams/current/finish")), 1)
 		self.assertIn("End of the ranked exam", self.output())
+
+	def test_snapshots_go_while_the_exam_runs_and_a_last_one_before_finish(self):
+		self.hand_in(FIRST, "int\tmain(void);\n")
+		self.run_shell("1", "finish")
+		paths = [path for method, path, _ in FakeServer.requests if method == "POST"]
+		self.assertIn("/api/v1/exams/current/snapshots", paths)
+		last_snapshot = max(i for i, path in enumerate(paths) if path == "/api/v1/exams/current/snapshots")
+		self.assertLess(last_snapshot, paths.index("/api/v1/exams/current/finish"))
+		name = CATALOG.variant(FIRST).expected_files[0]
+		sent = [body["files"] for body in self.posted("/api/v1/exams/current/snapshots")]
+		self.assertIn({name: "int\tmain(void);\n"}, sent)
 
 	def test_the_cheat_menu_is_off(self):
 		self.run_shell("1", "cheat")
