@@ -15,8 +15,9 @@ from tests.helpers import selected_exercises
 # Project root, found from this file's location so the tests work from any directory.
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "42pal"
-# Expected output of --version: the program name, then an X.Y.Z version number.
-VERSION_LINE = r"^42pal \d+\.\d+\.\d+$"
+# Expected output of --version: the program name, then an X.Y.Z version number,
+# with a pre-release tag while a version is being built (2.0.0-dev).
+VERSION_LINE = r"^42pal \d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$"
 
 def run_script(*args, cwd=ROOT, script=SCRIPT):
 	"""Run ./42pal (or `script`, a path to it) with the given arguments.
@@ -37,7 +38,7 @@ class TestLauncher(unittest.TestCase):
 	"""Behavior of the ./42pal launcher script."""
 
 	def test_version_flag_prints_version(self):
-		"""`./42pal --version` succeeds and prints `42pal X.Y.Z`."""
+		"""`./42pal --version` succeeds and prints `42pal X.Y.Z` (or `X.Y.Z-tag`)."""
 		result = run_script("--version")
 		# On failure, show stderr so the Python error appears in the report.
 		self.assertEqual(result.returncode, 0, result.stderr)

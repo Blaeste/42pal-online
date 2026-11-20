@@ -2,9 +2,9 @@
   <img src="docs/images/42pal.png" alt="42pal: the login screen" width="720">
 </p>
 
-# 42pal
+# 42pal online
 
-[![tests](https://github.com/Blaeste/42pal/actions/workflows/tests.yml/badge.svg)](https://github.com/Blaeste/42pal/actions/workflows/tests.yml)
+[![tests](https://github.com/Blaeste/42pal-online/actions/workflows/tests.yml/badge.svg)](https://github.com/Blaeste/42pal-online/actions/workflows/tests.yml)
 
 An exam trainer for 42 students: it works like the examshell, but every
 subject you get is a **variant** of an exercise, drawn at random, so you
@@ -12,6 +12,12 @@ train on the skill instead of learning one subject by heart. Your work is
 graded on your machine, like the moulinette, with a trace when it fails.
 
 It runs on the campus machines with **nothing to install and no sudo**.
+
+This is **42pal online**: the standalone 42pal, plus a ranked mode being
+built (you log in with your 42 account, a server grades your code again and
+keeps a leaderboard). Until that mode is ready, it works like
+[42pal 1.0.0](https://github.com/Blaeste/42pal), the standalone version,
+which stays as it is.
 
 ## Install
 
@@ -22,8 +28,8 @@ You need Linux with:
 - optionally `valgrind` (memory leaks) and `git` (to push your rendu).
 
 ```sh
-git clone https://github.com/Blaeste/42pal.git
-cd 42pal
+git clone https://github.com/Blaeste/42pal-online.git
+cd 42pal-online
 ./42pal
 ```
 
