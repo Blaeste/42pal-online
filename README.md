@@ -220,9 +220,9 @@ is given.
 The terminal prints a link and a code, and opens the browser when there is
 a screen. Log in with 42 there, accept the privacy policy the first time,
 and check that the page shows the same code before you confirm: the
-terminal is then logged in. Only active students of the 42 cursus and alumni
-can log in (pool candidates may not use the 42 API); the offline modes stay
-open to everyone and never touch the network.
+terminal is then logged in. Active students of the 42 cursus, piscineux of a
+C piscine in progress and alumni can log in; the offline modes stay open to
+everyone and never touch the network.
 
 ```sh
 ./42pal logout
@@ -234,7 +234,8 @@ Once logged in:
 ./42pal ranked
 ```
 
-starts a ranked exam of the cursus, or resumes the one in progress: the
+starts a ranked exam (of the piscine for a piscineux, of the cursus for
+the others), or resumes the one in progress: the
 server draws the subjects, keeps the time and the waits, and grades your
 rendu again with tests of its own after your `grademe` shows the trace here.
 
@@ -242,6 +243,7 @@ rendu again with tests of its own after your `grademe` shows the trace here.
 ./42pal leaderboard            # the global score of the season
 ./42pal leaderboard rank02     # the leaderboard of one exam
 ./42pal leaderboard rank02 --campus Mulhouse --season 2026-11
+./42pal leaderboard --piscine  # the global score of the piscine exams
 ```
 
 The token of the terminal is kept in `~/.42pal/online.json`, readable by

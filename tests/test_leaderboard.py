@@ -26,7 +26,9 @@ class FakeServer(BaseHTTPRequestHandler):
 		parts = urlsplit(self.path)
 		query = {key: values[0] for key, values in parse_qs(parts.query).items()}
 		self.asked.append((parts.path, query, self.headers.get("Authorization")))
-		body = {"season": query.get("season", "2026-11"), "exam": query.get("exam"), "campus": query.get("campus"),
+		audience = None if query.get("exam") else query.get("audience", "student")
+		body = {"season": query.get("season", "2026-11"), "exam": query.get("exam"), "audience": audience,
+			"campus": query.get("campus"),
 			"rows": ROWS if query.get("exam") else [dict(row, seconds=None) for row in ROWS]}
 		data = json.dumps(body).encode()
 		self.send_response(200)
@@ -66,6 +68,11 @@ class TestLeaderboard(unittest.TestCase):
 		text = self.console.file.getvalue()
 		self.assertIn("Global score", text)
 		self.assertNotIn("1:40:00", text)
+
+	def test_the_global_score_of_the_piscine(self):
+		leaderboard.show(self.console, self.api, audience="piscine")
+		self.assertEqual(FakeServer.asked[0][1], {"audience": "piscine"})
+		self.assertIn("Global score of the piscine", self.console.file.getvalue())
 
 	def test_it_needs_a_login(self):
 		with tempfile.TemporaryDirectory() as folder:

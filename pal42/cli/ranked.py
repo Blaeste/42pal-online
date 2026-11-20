@@ -47,7 +47,9 @@ class RankedShell(Shell):
 		try:
 			state = self._current()
 			if state is None:
-				exam = self.choose_exam("student", first=True)
+				# The exams of the piscine for an account of the piscine, else those of the cursus.
+				_, me = self.api.request("GET", "/me")
+				exam = self.choose_exam("piscine" if me.get("kind") == "pool" else "student", first=True)
 				if exam is BACK:
 					self.console.print("Goodbye!")
 					return

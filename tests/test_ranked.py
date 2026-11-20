@@ -39,6 +39,7 @@ class FakeServer(BaseHTTPRequestHandler):
 
 	current = None
 	verdict = None
+	kind = "student"
 	requests = []
 
 	def do_GET(self):
@@ -47,6 +48,8 @@ class FakeServer(BaseHTTPRequestHandler):
 			if FakeServer.current is None:
 				return self.answer(404, {"error": "no_exam", "message": "No ranked exam in progress."})
 			return self.answer(200, FakeServer.current)
+		if self.path == "/api/v1/me":
+			return self.answer(200, {"login": "jdoe", "campus": "Mulhouse", "kind": FakeServer.kind})
 		if self.path == "/api/v1/exams/current/snapshots/last":
 			return self.answer(200, {"seq": 0, "hash": ""})
 		if self.path == "/api/v1/grademes/1":
@@ -95,6 +98,7 @@ class RankedTestCase(unittest.TestCase):
 	def setUp(self):
 		FakeServer.current = None
 		FakeServer.verdict = None
+		FakeServer.kind = "student"
 		FakeServer.requests = []
 		server = ThreadingHTTPServer(("127.0.0.1", 0), FakeServer)
 		threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -160,6 +164,12 @@ class TestRankedShell(RankedTestCase):
 		self.assertEqual((shell.level, shell.variant.id, shell.failures), (1, FIRST, 1))
 		# The second grademe comes too early: refused here, nothing sent.
 		self.assertEqual(len(self.posted("/api/v1/exams/current/grademe")), 1)
+
+	def test_a_piscine_account_gets_the_piscine_exams(self):
+		FakeServer.kind = "pool"
+		self.run_shell("1", "finish")
+		[started] = self.posted("/api/v1/exams")
+		self.assertTrue(started["exam"].startswith("piscine"), started)
 
 	def test_an_exam_in_progress_on_the_server_resumes_without_menu(self):
 		FakeServer.current = state(level=2, variant=SECOND, passed_levels=[1], grade=25)

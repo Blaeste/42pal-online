@@ -159,7 +159,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 2. **Saisons** : le mois calendaire.
 3. **Langue du site** : l'anglais, comme le programme.
 4. **VPS** : réutiliser le VPS OVH du plan de la v1, s'il a la place pour des conteneurs (gVisor demande un noyau qui le permet).
-5. **Qui peut jouer en classé** : `/v2/me` distingue les étudiants actifs, les piscineux (cursus `piscine-c`), les alumni et le staff. Les CGU de l'API (art. 1) refusent l'accès aux candidats à l'entrée et aux anciens étudiants qui ne sont pas alumni. Recommandation : étudiants actifs et alumni ; les piscineux seulement si 42 le confirme par écrit (le mode hors ligne reste ouvert à tous) ; le staff seulement comme relecteur.
+5. **Qui peut jouer en classé** : **décidé par le propriétaire le 2026-11-20** : étudiants actifs du cursus, piscineux d'une piscine C en cours (comptes `pool`, exams de piscine, score global de la piscine à part) et alumni ; le staff seulement comme relecteur (plus tard). Les CGU de l'API (art. 1) disent que les candidats « n'ont pas accès à l'API » ; lecture du propriétaire : c'est lui qui utilise l'API, les candidats se connectent seulement. À dire à la pédagogie en présentant le projet. Un vrai compte a montré que la date du black hole peut rester dans le passé sur un étudiant actif (42 a supprimé le black hole) : un cursus est en cours jusqu'à sa date de fin seulement.
 
 ## Hors périmètre
 

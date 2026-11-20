@@ -45,6 +45,7 @@ def main(argv=None):
 	board.add_argument("exam", nargs="?", help="an exam, like rank02 (the global score if not given)")
 	board.add_argument("--season", help="a season, like 2026-11 (the current one if not given)")
 	board.add_argument("--campus", help="the students of one campus only")
+	board.add_argument("--piscine", action="store_true", help="the global score of the piscine exams")
 	arguments = parser.parse_args(argv)
 	if arguments.report:
 		from pal42.report import report_text
@@ -73,7 +74,7 @@ def main(argv=None):
 		return ranked_main()
 	if arguments.command == "leaderboard":
 		from pal42.cli.leaderboard import main as leaderboard_main
-		return leaderboard_main(arguments.exam, arguments.season, arguments.campus)
+		return leaderboard_main(arguments.exam, arguments.season, arguments.campus, piscine=arguments.piscine)
 	# A newer 42pal is looked for while the student logs in; only when someone
 	# can answer the question (not for answers sent through a pipe).
 	update_check = None
