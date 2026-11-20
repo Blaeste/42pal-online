@@ -3,6 +3,7 @@
 Run all the tests from the project root with: python3 -m unittest -v
 """
 
+import random
 import shutil
 import tempfile
 import unittest
@@ -166,6 +167,68 @@ int	main(int ac, char **av)
 	return (0);
 }
 """
+
+def seeded_tests(params, rng):
+	"""A fixed test, then a random word: another seed gives another word."""
+	return [TestCase(("hello",)), TestCase((f"w{rng.randrange(10**6)}",))]
+
+SEEDED = Variant(
+	make_exercise(name="echo_first", expected_files=("echo_first.c",),
+		oracle=echo_oracle, generate_tests=seeded_tests),
+	0, {"mode": "common"},
+)
+
+# The word of the variant's own seed (0), the only one a cheat could know.
+VISIBLE_WORD = seeded_tests({}, random.Random(0))[1].args[0]
+
+# Prints the expected output of the variant's tests only, written in hard.
+HARD_CODED = r"""#include <unistd.h>
+
+static int	same(char *a, char *b)
+{
+	while (*a && *a == *b)
+	{
+		a++;
+		b++;
+	}
+	return (*a == *b);
+}
+
+int	main(int ac, char **av)
+{
+	if (ac == 2 && same(av[1], "hello"))
+		write(1, "hello", 5);
+	if (ac == 2 && same(av[1], "WORD"))
+		write(1, "WORD", LENGTH);
+	write(1, "\n", 1);
+	return (0);
+}
+""".replace("WORD", VISIBLE_WORD).replace("LENGTH", str(len(VISIBLE_WORD)))
+
+class TestExtraSeeds(unittest.TestCase):
+	"""extra_seeds: the server adds tests from secret seeds to the variant's."""
+
+	def setUp(self):
+		self.tmp = tempfile.TemporaryDirectory()
+		self.addCleanup(self.tmp.cleanup)
+		self.rendu = Path(self.tmp.name)
+
+	def hand_in(self, code):
+		(self.rendu / "echo_first.c").write_text(code, encoding="utf-8")
+
+	def test_hard_coded_outputs_pass_the_visible_tests_only(self):
+		self.hand_in(HARD_CODED)
+		self.assertTrue(grade(SEEDED, self.rendu, CRunner()).passed)
+		result = grade(SEEDED, self.rendu, CRunner(), extra_seeds=(1,))
+		self.assertFalse(result.passed)
+		# "hello" is in both: run once.
+		self.assertEqual((result.tests_passed, result.tests_total), (2, 3))
+
+	def test_a_real_solution_passes_the_extra_tests(self):
+		self.hand_in(ECHO_OK)
+		result = grade(SEEDED, self.rendu, CRunner(), extra_seeds=(1, 2))
+		self.assertTrue(result.passed, result.trace)
+		self.assertEqual(result.tests_total, 4)
 
 class TestRealExercise(unittest.TestCase):
 	"""A real C solution, graded on all the tests of a real exercise."""

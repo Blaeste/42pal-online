@@ -34,7 +34,7 @@ class Grade:
 	# What could not be checked (valgrind missing...): the front-ends show it.
 	warnings: tuple[str, ...] = ()
 
-def grade(variant, rendu, runner, progress=None, valgrind="valgrind"):
+def grade(variant, rendu, runner, progress=None, valgrind="valgrind", extra_seeds=()):
 	"""Grade the files of `rendu` (the student's folder) for `variant`.
 
 	In order: the expected files must be there, they must compile, they must
@@ -45,10 +45,12 @@ def grade(variant, rendu, runner, progress=None, valgrind="valgrind"):
 	front-ends use it to show how far the grading is. When the exercise
 	checks leaks, the tests are then run again under valgrind, and progress
 	gets a third argument, "memory".
+	extra_seeds adds the tests of other seeds to the variant's: the server
+	of 42pal online draws them in secret, so that a rendu that writes the
+	expected outputs of the visible tests in hard fails.
 	"""
 	exo = variant.exercise
-	# The tests depend on the variant's seed: grading twice runs the same ones.
-	tests = exo.generate_tests(variant.params, random.Random(variant.seed))
+	tests = _tests(variant, extra_seeds)
 	sources = [Path(rendu) / file for file in variant.expected_files]
 	missing = [source.name for source in sources if not source.is_file()]
 	if missing:
@@ -89,6 +91,17 @@ def grade(variant, rendu, runner, progress=None, valgrind="valgrind"):
 		if exo.check_leaks:
 			return _check_leaks(variant, program, tests, progress, valgrind)
 	return Grade(True, "", len(tests), len(tests))
+
+def _tests(variant, extra_seeds):
+	"""The tests of the variant, then those of each extra seed it does not have yet."""
+	exo = variant.exercise
+	# The tests depend on the variant's seed: grading twice runs the same ones.
+	tests = list(exo.generate_tests(variant.params, random.Random(variant.seed)))
+	for seed in extra_seeds:
+		for test in exo.generate_tests(variant.params, random.Random(seed)):
+			if test not in tests:
+				tests.append(test)
+	return tests
 
 def _forbidden(exo, compiled, sources):
 	"""The trace of what the rendu uses without the right, or "" if nothing."""
