@@ -47,6 +47,18 @@ Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 4
 - **Trous** dans les instantanés (client coupé) : revue, pas refus.
 - L'IP compte peu : tout un cluster sort par la même IP au campus.
 
+## API 42 (doc lue le 2026-11-20)
+
+- **OAuth « Authorization Code »** : `GET https://api.intra.42.fr/oauth/authorize` avec `client_id`, `redirect_uri`, `response_type=code`, `scope=public` et un `state` aléatoire ; puis `POST https://api.intra.42.fr/oauth/token` avec `grant_type=authorization_code`, `client_id`, `client_secret`, `code` et `redirect_uri`, **côté serveur seulement**. Le jeton s'envoie dans `Authorization: Bearer <jeton>`.
+- **Redirections** : l'app en accepte plusieurs, une par ligne → la vraie (`https://<domaine>/auth/callback`) et une locale pour le développement.
+- **Scope** : `public` suffit pour lire `/v2/me`. Aucun autre.
+- **`GET /v2/me`** donne `id`, `login`, `kind`, `staff?`, `alumni?`, `active?`, `pool_month`, `pool_year`, `cursus_users` (cursus `piscine-c`, `42cursus`…, avec `blackholed_at`), `campus` et `campus_users` (avec `is_primary`). Il donne aussi l'e-mail, les noms, le téléphone et la photo : **le serveur ne les garde pas**.
+- **Ce que le serveur garde** : l'`id` 42, le `login`, le campus principal (id, nom), le type de compte, `active?` et les cursus. Le jeton 42 ne sert qu'à la connexion (un seul appel à `/v2/me`), puis le serveur donne son propre jeton : aucun appel à l'API 42 pendant un exam.
+- **Limites** : 2 requêtes par seconde et 1200 par heure pour toute l'app. Une connexion coûte 2 requêtes, soit environ 600 connexions par heure. Le rôle « Official App », demandé par mail à 42 quand l'app est prête et publique, relève ces limites.
+- **Jetons** : 7200 s de validité dans les exemples ; `GET https://api.intra.42.fr/oauth/token/info` donne le temps restant.
+- **App créée** : « 42PAL », type « 42 Pedagogical Project ». Restent à régler : la vraie redirection (pour l'instant un placeholder) et le scope `public` à cocher.
+- **Encore à lire** : les « API General Terms of Use » (`https://profile.intra.42.fr/legal/terms/33`), visibles seulement une fois connecté.
+
 ## Étapes
 
 Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (commandes à copier et sortie attendue).
@@ -121,6 +133,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 2. **Saisons** : le mois calendaire.
 3. **Langue du site** : l'anglais, comme le programme.
 4. **VPS** : réutiliser le VPS OVH du plan de la v1, s'il a la place pour des conteneurs (gVisor demande un noyau qui le permet).
+5. **Qui peut jouer en classé** : `/v2/me` distingue les étudiants actifs, les piscineux (cursus `piscine-c`), les alumni et le staff. Recommandation : étudiants actifs et piscineux, avec un leaderboard à part pour la piscine ; le staff seulement comme relecteur.
 
 ## Hors périmètre
 
