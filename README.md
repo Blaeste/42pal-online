@@ -245,7 +245,9 @@ rendu again with tests of its own after your `grademe` shows the trace here.
 ```
 
 The token of the terminal is kept in `~/.42pal/online.json`, readable by
-you only. The server is `http://127.0.0.1:8000` until its address is
+you only. `./42pal delete-account` deletes your account and all its data on
+the server (the site's account page can too, and gives all your data as a
+file). The server is `http://127.0.0.1:8000` until its address is
 chosen; `PAL42_SERVER` gives another one. How the client and the server
 talk: [docs/protocol.md](docs/protocol.md).
 

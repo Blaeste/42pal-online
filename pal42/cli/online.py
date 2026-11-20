@@ -1,8 +1,9 @@
-"""./42pal login and ./42pal logout: this terminal and the 42pal server.
+"""./42pal login, logout and delete-account: this terminal and the 42pal server.
 
 login pairs the terminal with the student's 42 account: the browser does
 the 42 login with the server, the terminal waits for the token
 (docs/protocol.md). logout revokes the token and forgets it.
+delete-account deletes the account and all its data on the server.
 """
 
 import os
@@ -80,6 +81,31 @@ def logout(console, credentials):
 		console.print("Its token is still valid on the server: deleting your account on the site revokes it.")
 	return 0
 
+def delete_account(console, credentials, ask=input):
+	"""Delete the account and all its data on the server, once the login is typed again; return the exit code."""
+	saved = online.load_credentials(credentials)
+	if saved is None:
+		console.print("This terminal is not logged in: log in first, or delete your account on the site.")
+		return 1
+	login_name = saved["login"]
+	console.print("This deletes your 42pal online account and all its data on the server: grades, code, "
+		"snapshots. It cannot be undone.")
+	try:
+		typed = ask(f"Type your login ({login_name}) to confirm: ")
+	except EOFError:
+		typed = ""
+	if typed.strip() != login_name:
+		console.print("Nothing deleted.")
+		return 1
+	try:
+		online.Api(saved["server"], saved["token"]).request("DELETE", "/account")
+	except online.OnlineError as error:
+		console.print(f"[red]{escape(str(error))}[/]")
+		return 1
+	online.delete_credentials(credentials)
+	console.print("Your account and all its data are deleted. The offline modes of 42pal stay open.")
+	return 0
+
 def login_main():
 	"""./42pal login."""
 	return login(Console(), online.server_url(), online.CREDENTIALS)
@@ -87,3 +113,7 @@ def login_main():
 def logout_main():
 	"""./42pal logout."""
 	return logout(Console(), online.CREDENTIALS)
+
+def delete_account_main():
+	"""./42pal delete-account."""
+	return delete_account(Console(), online.CREDENTIALS)

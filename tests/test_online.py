@@ -55,6 +55,12 @@ class FakeServer(BaseHTTPRequestHandler):
 			return self.answer(204, None)
 		self.answer(404, {"error": "request", "message": "Unknown request."})
 
+	def do_DELETE(self):
+		self.requests.append((self.path, self.headers.get("X-42pal-Version"), self.headers.get("Authorization"), None))
+		if self.path == "/api/v1/account":
+			return self.answer(204, None)
+		self.answer(404, {"error": "request", "message": "Unknown request."})
+
 	def answer(self, status, body):
 		data = b"" if body is None else json.dumps(body).encode()
 		self.send_response(status)
@@ -169,6 +175,30 @@ class TestLogout(OnlineTestCase):
 	def test_logout_when_not_logged_in(self):
 		self.assertEqual(self.logout(), 0)
 		self.assertIn("Not logged in", self.output())
+
+class TestDeleteAccount(OnlineTestCase):
+	"""./42pal delete-account: the login typed again, then everything goes."""
+
+	def delete(self, typed):
+		return online_cli.delete_account(self.console, self.credentials, ask=lambda prompt: typed)
+
+	def test_the_login_typed_again_deletes_the_account(self):
+		online.save_credentials(self.credentials, self.url, {"token": "tok-1", "login": "jdoe", "campus": None})
+		self.assertEqual(self.delete("jdoe"), 0)
+		self.assertEqual(FakeServer.requests[0][:3], ("/api/v1/account", __version__, "Bearer tok-1"))
+		self.assertFalse(self.credentials.exists())
+		self.assertIn("all its data are deleted", self.output())
+
+	def test_another_answer_deletes_nothing(self):
+		online.save_credentials(self.credentials, self.url, {"token": "tok-1", "login": "jdoe", "campus": None})
+		self.assertEqual(self.delete("yes"), 1)
+		self.assertEqual(FakeServer.requests, [])
+		self.assertTrue(self.credentials.exists())
+		self.assertIn("Nothing deleted", self.output())
+
+	def test_not_logged_in_says_where_to_delete(self):
+		self.assertEqual(self.delete("jdoe"), 1)
+		self.assertIn("on the site", self.output())
 
 class TestBrowser(unittest.TestCase):
 	"""The browser opens only where there is a screen: never a text browser in the terminal."""

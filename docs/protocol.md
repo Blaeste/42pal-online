@@ -89,6 +89,10 @@ Who the token belongs to. `200` `{"login": "jdoe", "campus": "Mulhouse", "kind":
 
 Revokes the token of the request. `204`, no body. `./42pal logout` then deletes `~/.42pal/online.json`; if the server cannot be reached, the file is deleted anyway and the client says the token is still valid on the server until the student deletes their account or logs out again.
 
+### `DELETE /api/v1/account`
+
+Withdraws the consent: the account and everything that is theirs go (exams, grademes, code, snapshots, the other terminals). `204`, no body. `./42pal delete-account` asks to type the login again first, then deletes `~/.42pal/online.json`; the site's account page does the same.
+
 ## The ranked exam
 
 `./42pal ranked`. The server is the authority: it draws each subject from a secret seed, keeps the time (the real duration of the exam), the waits after a failure (the hard ones of the exam mode) and the levels, and grades the rendu again in a sandbox, with the tests of the variant plus those of a secret seed, new at each grademe. The client shows the subject from its own catalog (the same version as the server), grades the rendu itself first for the trace at once, then shows the server's verdict. One ranked exam at a time per student.

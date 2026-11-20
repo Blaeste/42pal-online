@@ -40,6 +40,7 @@ def main(argv=None):
 	commands.add_parser("login", help="log this terminal in to the 42pal server with your 42 account (ranked mode)")
 	commands.add_parser("logout", help="log this terminal out of the 42pal server")
 	commands.add_parser("ranked", help="take a ranked exam: drawn, timed and graded by the 42pal server")
+	commands.add_parser("delete-account", help="delete your 42pal online account and all its data on the server")
 	board = commands.add_parser("leaderboard", help="the leaderboard of the 42pal server: global, or of one exam")
 	board.add_argument("exam", nargs="?", help="an exam, like rank02 (the global score if not given)")
 	board.add_argument("--season", help="a season, like 2026-11 (the current one if not given)")
@@ -64,6 +65,9 @@ def main(argv=None):
 	if arguments.command == "logout":
 		from pal42.cli.online import logout_main
 		return logout_main()
+	if arguments.command == "delete-account":
+		from pal42.cli.online import delete_account_main
+		return delete_account_main()
 	if arguments.command == "ranked":
 		from pal42.cli.ranked import main as ranked_main
 		return ranked_main()
