@@ -1,0 +1,78 @@
+"""./42pal leaderboard: the leaderboard of the server, in the terminal (plan 7.3)."""
+
+import io
+import json
+import tempfile
+import threading
+import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
+
+from pal42 import online
+# Imported before rich: pal42.cli puts vendor/, where rich is, on the path.
+from pal42.cli import leaderboard
+from rich.console import Console
+
+ROWS = [
+	{"rank": 1, "login": "bob", "campus": "Paris", "grade": 75, "seconds": 6000},
+	{"rank": 2, "login": "ann", "campus": "Mulhouse", "grade": 75, "seconds": 7200},
+]
+
+class FakeServer(BaseHTTPRequestHandler):
+	asked = []
+
+	def do_GET(self):
+		parts = urlsplit(self.path)
+		query = {key: values[0] for key, values in parse_qs(parts.query).items()}
+		self.asked.append((parts.path, query, self.headers.get("Authorization")))
+		body = {"season": query.get("season", "2026-11"), "exam": query.get("exam"), "campus": query.get("campus"),
+			"rows": ROWS if query.get("exam") else [dict(row, seconds=None) for row in ROWS]}
+		data = json.dumps(body).encode()
+		self.send_response(200)
+		self.send_header("Content-Type", "application/json")
+		self.send_header("Content-Length", str(len(data)))
+		self.end_headers()
+		self.wfile.write(data)
+
+	def log_message(self, *args):
+		pass
+
+class TestLeaderboard(unittest.TestCase):
+
+	def setUp(self):
+		FakeServer.asked = []
+		server = ThreadingHTTPServer(("127.0.0.1", 0), FakeServer)
+		threading.Thread(target=server.serve_forever, daemon=True).start()
+		self.addCleanup(server.server_close)
+		self.addCleanup(server.shutdown)
+		self.api = online.Api(f"http://127.0.0.1:{server.server_port}", "tok-1")
+		self.console = Console(file=io.StringIO(), width=120, color_system=None)
+
+	def test_the_leaderboard_of_an_exam(self):
+		self.assertEqual(leaderboard.show(self.console, self.api, exam="rank02", season="2026-11", campus="Paris"), 0)
+		path, query, authorization = FakeServer.asked[0]
+		self.assertEqual((path, query, authorization),
+			("/api/v1/leaderboard", {"exam": "rank02", "season": "2026-11", "campus": "Paris"}, "Bearer tok-1"))
+		text = self.console.file.getvalue()
+		self.assertIn("rank02", text)
+		self.assertIn("2026-11", text)
+		self.assertRegex(text, r"1\s+│?\s*bob\s+│?\s*Paris\s+│?\s*75")
+		self.assertIn("1:40:00", text)
+
+	def test_the_global_score_has_no_time(self):
+		leaderboard.show(self.console, self.api)
+		self.assertEqual(FakeServer.asked[0][1], {})
+		text = self.console.file.getvalue()
+		self.assertIn("Global score", text)
+		self.assertNotIn("1:40:00", text)
+
+	def test_it_needs_a_login(self):
+		with tempfile.TemporaryDirectory() as folder:
+			console = Console(file=io.StringIO(), width=120, color_system=None)
+			self.assertEqual(leaderboard.main(console=console, credentials=Path(folder) / "online.json"), 1)
+		self.assertIn("./42pal login", console.file.getvalue())
+
+	def test_a_server_out_of_reach_is_said(self):
+		self.assertEqual(leaderboard.show(self.console, online.Api("http://127.0.0.1:9", "t")), 1)
+		self.assertIn("cannot be reached", self.console.file.getvalue())

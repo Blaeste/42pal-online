@@ -40,6 +40,10 @@ def main(argv=None):
 	commands.add_parser("login", help="log this terminal in to the 42pal server with your 42 account (ranked mode)")
 	commands.add_parser("logout", help="log this terminal out of the 42pal server")
 	commands.add_parser("ranked", help="take a ranked exam: drawn, timed and graded by the 42pal server")
+	board = commands.add_parser("leaderboard", help="the leaderboard of the 42pal server: global, or of one exam")
+	board.add_argument("exam", nargs="?", help="an exam, like rank02 (the global score if not given)")
+	board.add_argument("--season", help="a season, like 2026-11 (the current one if not given)")
+	board.add_argument("--campus", help="the students of one campus only")
 	arguments = parser.parse_args(argv)
 	if arguments.report:
 		from pal42.report import report_text
@@ -63,6 +67,9 @@ def main(argv=None):
 	if arguments.command == "ranked":
 		from pal42.cli.ranked import main as ranked_main
 		return ranked_main()
+	if arguments.command == "leaderboard":
+		from pal42.cli.leaderboard import main as leaderboard_main
+		return leaderboard_main(arguments.exam, arguments.season, arguments.campus)
 	# A newer 42pal is looked for while the student logs in; only when someone
 	# can answer the question (not for answers sent through a pipe).
 	update_check = None

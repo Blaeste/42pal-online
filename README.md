@@ -238,6 +238,12 @@ starts a ranked exam of the cursus, or resumes the one in progress: the
 server draws the subjects, keeps the time and the waits, and grades your
 rendu again with tests of its own after your `grademe` shows the trace here.
 
+```sh
+./42pal leaderboard            # the global score of the season
+./42pal leaderboard rank02     # the leaderboard of one exam
+./42pal leaderboard rank02 --campus Mulhouse --season 2026-11
+```
+
 The token of the terminal is kept in `~/.42pal/online.json`, readable by
 you only. The server is `http://127.0.0.1:8000` until its address is
 chosen; `PAL42_SERVER` gives another one. How the client and the server

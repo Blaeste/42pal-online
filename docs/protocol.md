@@ -145,6 +145,19 @@ While a ranked exam runs, the client sends a snapshot every 10 seconds, and a la
 
 `{"seq": 12, "hash": "..."}`, or `{"seq": 0, "hash": ""}` before the first: a terminal that resumes the exam follows the chain from there.
 
+## Leaderboards
+
+### `GET /api/v1/leaderboard?exam=rank02&season=2026-11&campus=Mulhouse`
+
+Every parameter is optional: without `exam`, the global score (the sum of each student's best grade per exam); without `season`, the current one (a calendar month, in UTC); without `campus`, every campus. Validated exams only. `200`:
+
+```json
+{"season": "2026-11", "exam": "rank02", "campus": null,
+ "rows": [{"rank": 1, "login": "jdoe", "campus": "Mulhouse", "grade": 75, "seconds": 6000}]}
+```
+
+Per exam, the best grade of each student, then the shortest time (`seconds`); students with the same grade and time share their rank. `seconds` is `null` in the global score. `./42pal leaderboard [EXAM] [--season S] [--campus C]` shows it; the site shows it too, to logged-in members only.
+
 ## Who may play ranked
 
 The server reads `/v2/me` on the intra and lets in active students of the 42 cursus and alumni. Pool candidates may not use the 42 API (its terms, article 1), so they get `refused`; the offline modes stay open to everyone. The server keeps the 42 id, the login, the primary campus and the kind of account: nothing else from the intra (no email, no name, no picture).
