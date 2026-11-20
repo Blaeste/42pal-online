@@ -37,6 +37,8 @@ def main(argv=None):
 	practice.add_argument("--theme", help="the theme to practise (a menu if not given)")
 	# SUPPRESS: ./42pal --plain practice keeps the --plain given before.
 	practice.add_argument("--plain", action="store_true", default=argparse.SUPPRESS, help=plain_help)
+	commands.add_parser("login", help="log this terminal in to the 42pal server with your 42 account (ranked mode)")
+	commands.add_parser("logout", help="log this terminal out of the 42pal server")
 	arguments = parser.parse_args(argv)
 	if arguments.report:
 		from pal42.report import report_text
@@ -50,6 +52,13 @@ def main(argv=None):
 	if arguments.command == "practice":
 		from pal42.cli.practice import main as practice_main
 		return practice_main(arguments.theme, full_screen=screen)
+	# The only commands that use the network: pal42.online is loaded for them only.
+	if arguments.command == "login":
+		from pal42.cli.online import login_main
+		return login_main()
+	if arguments.command == "logout":
+		from pal42.cli.online import logout_main
+		return logout_main()
 	# A newer 42pal is looked for while the student logs in; only when someone
 	# can answer the question (not for answers sent through a pipe).
 	update_check = None

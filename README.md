@@ -211,6 +211,28 @@ A passed `grademe` (`g`) gives the next subject; `next` (`n`) skips to
 another one; `finish` (`f`) stops. It opens full screen too, unless `--plain`
 is given.
 
+## Log in for the ranked mode (being built)
+
+```sh
+./42pal login
+```
+
+The terminal prints a link and a code, and opens the browser when there is
+a screen. Log in with 42 there, accept the privacy policy the first time,
+and check that the page shows the same code before you confirm: the
+terminal is then logged in. Only active students of the 42 cursus and alumni
+can log in (pool candidates may not use the 42 API); the offline modes stay
+open to everyone and never touch the network.
+
+```sh
+./42pal logout
+```
+
+The token of the terminal is kept in `~/.42pal/online.json`, readable by
+you only. The server is `http://127.0.0.1:8000` until its address is
+chosen; `PAL42_SERVER` gives another one. How the client and the server
+talk: [docs/protocol.md](docs/protocol.md).
+
 ## What the catalog has today
 
 Nine exams: the four piscine exams, and the five ranks of the cursus. A
