@@ -39,6 +39,7 @@ def main(argv=None):
 	practice.add_argument("--plain", action="store_true", default=argparse.SUPPRESS, help=plain_help)
 	commands.add_parser("login", help="log this terminal in to the 42pal server with your 42 account (ranked mode)")
 	commands.add_parser("logout", help="log this terminal out of the 42pal server")
+	commands.add_parser("ranked", help="take a ranked exam: drawn, timed and graded by the 42pal server")
 	arguments = parser.parse_args(argv)
 	if arguments.report:
 		from pal42.report import report_text
@@ -59,6 +60,9 @@ def main(argv=None):
 	if arguments.command == "logout":
 		from pal42.cli.online import logout_main
 		return logout_main()
+	if arguments.command == "ranked":
+		from pal42.cli.ranked import main as ranked_main
+		return ranked_main()
 	# A newer 42pal is looked for while the student logs in; only when someone
 	# can answer the question (not for answers sent through a pipe).
 	update_check = None

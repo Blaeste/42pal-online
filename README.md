@@ -228,6 +228,16 @@ open to everyone and never touch the network.
 ./42pal logout
 ```
 
+Once logged in:
+
+```sh
+./42pal ranked
+```
+
+starts a ranked exam of the cursus, or resumes the one in progress: the
+server draws the subjects, keeps the time and the waits, and grades your
+rendu again with tests of its own after your `grademe` shows the trace here.
+
 The token of the terminal is kept in `~/.42pal/online.json`, readable by
 you only. The server is `http://127.0.0.1:8000` until its address is
 chosen; `PAL42_SERVER` gives another one. How the client and the server
