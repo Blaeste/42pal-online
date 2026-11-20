@@ -1,0 +1,17 @@
+#!/bin/sh
+# Launcher for 42pal: runs the pal42 package with the system python3.
+# Uses only what is available on 42 machines (no install, no pip).
+
+# Folder of this script, as an absolute path: the pal42 package is next to it.
+# readlink -f follows symlinks (like ~/bin/42pal) to the real script and
+# returns an absolute path; dirname then keeps only its folder.
+ROOT=$(dirname -- "$(readlink -f -- "$0")")
+
+# Put that folder first in PYTHONPATH so python3 finds pal42 from any directory,
+# without a cd: the program keeps running in the user's current directory.
+# ${PYTHONPATH:+:$PYTHONPATH} keeps the user's own PYTHONPATH, if any, after it.
+PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH
+
+# exec replaces this shell by python3; "$@" forwards all the arguments.
+exec python3 -m pal42 "$@"

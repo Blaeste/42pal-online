@@ -1,0 +1,9 @@
+{
+	"title": "Exam Rank 05",
+	"audience": "student",
+	"language": "python",
+	"levels": 3,
+	"duration_minutes": 180,
+	"compile": ["python3"],
+	"retry_minutes": {"soft": [0, 1, 2, 3, 5], "hard": [0.5, 2.5, 3, 5.5, 8.5, 14, 22.5, 36.5, 59]}
+}

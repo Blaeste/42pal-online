@@ -1,0 +1,24 @@
+name: Bug
+description: Something does not work as it should (a crash, a grading that looks wrong, the screen).
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Report
+      description: Paste what `./42pal --report` prints (versions, system, exam in progress; nothing personal).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: trace
+    attributes:
+      label: Trace or screenshot
+      description: The trace of the grademe (in ~/42pal_exam/traces/), or a screenshot. Your code is not needed.

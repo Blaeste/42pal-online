@@ -1,0 +1,29 @@
+name: Subject
+description: A subject that is wrong, unclear, or not at the right level.
+labels: ["subject"]
+body:
+  - type: input
+    id: subject
+    attributes:
+      label: Subject
+      description: Its name, and if you can its id from `./42pal --report` (like shift_letters#5).
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong
+      options:
+        - The statement is unclear
+        - An example or an expected output is wrong
+        - Too hard or too easy for its level
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What you read, what you understood, and what you think it should say.
+    validations:
+      required: true

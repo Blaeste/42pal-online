@@ -1,0 +1,458 @@
+{
+	"letter_search": {
+		"skill": "Display the first given letter found in a string",
+		"exams": {"piscine_01": [1]}
+	},
+	"letter_or_fallback": {
+		"skill": "Display a given letter found in a string, or a fallback",
+		"exams": {"piscine_01": [3]}
+	},
+	"digit_countdown": {
+		"skill": "Display the digits in decreasing order",
+		"exams": {"piscine_01": [1]}
+	},
+	"print_digits": {
+		"skill": "Display a range of digits or letters with write",
+		"exams": {"piscine_01": [1]}
+	},
+	"fixed_message": {
+		"skill": "Display a fixed message",
+		"exams": {"piscine_01": [2]}
+	},
+	"alternating_alphabet": {
+		"skill": "Display the alphabet with its case changing as it goes",
+		"exams": {"piscine_01": [2]}
+	},
+	"backward_alphabet": {
+		"skill": "Display the alphabet backwards with a pattern of case",
+		"exams": {"piscine_01": [4]}
+	},
+	"one_char": {
+		"skill": "Display one fixed character",
+		"exams": {"piscine_01": [4]}
+	},
+	"one_char_end": {
+		"skill": "Display one fixed character at the end of a line",
+		"exams": {"piscine_01": [4]}
+	},
+	"pick_argument": {
+		"skill": "Display one chosen argument",
+		"exams": {"piscine_01": [3]}
+	},
+	"last_argument": {
+		"skill": "Display an argument chosen from the end",
+		"exams": {"piscine_01": [3]}
+	},
+	"argument_count": {
+		"skill": "Display a number computed from the arguments",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"option_flags": {
+		"skill": "Read the options of a program from its arguments",
+		"exams": {"piscine_final": [4]}
+	},
+	"string_copy": {
+		"skill": "Copy a string into a given buffer",
+		"exams": {"piscine_01": [5], "piscine_02": [1], "rank02": [1]}
+	},
+	"string_length": {
+		"skill": "Count characters in a string",
+		"exams": {"piscine_01": [5], "piscine_02": [1], "rank02": [1]}
+	},
+	"string_print": {
+		"skill": "Display a string with write",
+		"exams": {"piscine_01": [7], "piscine_02": [3], "rank02": [1]}
+	},
+	"reverse_print": {
+		"skill": "Display a string backwards",
+		"exams": {"piscine_01": [8], "piscine_02": [4], "rank02": [1]}
+	},
+	"string_compare": {
+		"skill": "Compare two strings",
+		"exams": {"piscine_02": [7], "piscine_03": [2], "rank02": [2]}
+	},
+	"string_reverse": {
+		"skill": "Reverse a string in place",
+		"exams": {"piscine_02": [7], "piscine_03": [2], "rank02": [2]}
+	},
+	"char_span": {
+		"skill": "Measure the start of a string free of some characters",
+		"exams": {"rank02": [2]}
+	},
+	"accept_span": {
+		"skill": "Measure a run of characters that belong to a set given as a string",
+		"exams": {"rank02": [2]}
+	},
+	"set_search": {
+		"skill": "Find in a string a character that belongs, or not, to a set",
+		"exams": {"rank02": [2]}
+	},
+	"value_swap": {
+		"skill": "Exchange values through pointers",
+		"exams": {"piscine_01": [7], "piscine_02": [3], "rank02": [1]}
+	},
+	"letter_repeat": {
+		"skill": "Repeat each letter by its place in the alphabet",
+		"exams": {"piscine_01": [6], "piscine_02": [1], "rank02": [1]}
+	},
+	"char_replace": {
+		"skill": "Replace characters of a string",
+		"exams": {"piscine_01": [6], "piscine_02": [2], "rank02": [1]}
+	},
+	"case_swap": {
+		"skill": "Change the case of letters",
+		"exams": {"piscine_01": [6], "piscine_02": [2], "rank02": [1]}
+	},
+	"letter_rotation": {
+		"skill": "Shift letters by a fixed number of places in the alphabet",
+		"exams": {"piscine_01": [8], "piscine_02": [4], "rank02": [1]}
+	},
+	"letter_step": {
+		"skill": "Move letters one place in the alphabet",
+		"exams": {"piscine_01": [8], "piscine_02": [4], "rank02": [1]}
+	},
+	"alphabet_mirror": {
+		"skill": "Mirror letters in the alphabet",
+		"exams": {"piscine_02": [7], "piscine_03": [2], "rank02": [2]}
+	},
+	"find_word": {
+		"skill": "Display one word of a string",
+		"exams": {"piscine_01": [7], "piscine_02": [3], "rank02": [1]}
+	},
+	"end_word": {
+		"skill": "Display a word found from the end of a string",
+		"exams": {"piscine_02": [6], "piscine_03": [1], "rank02": [2]}
+	},
+	"space_cleanup": {
+		"skill": "Clean up the spaces between the words of a string",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"space_spread": {
+		"skill": "Spread the words of a string with a fixed separator",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"word_reverse": {
+		"skill": "Display the words of a string in another order",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"word_rotate": {
+		"skill": "Move a word of a string to the other end",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"case_convert": {
+		"skill": "Convert a name from one writing style to another",
+		"exams": {"rank02": [2]}
+	},
+	"case_convert_back": {
+		"skill": "Convert a name back between writing styles",
+		"exams": {"rank02": [2]}
+	},
+	"capitalize_last": {
+		"skill": "Put a letter of each word in uppercase, counting from the end",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"capitalize_first": {
+		"skill": "Put a letter of each word in uppercase, counting from the start",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"common_chars": {
+		"skill": "Display the characters two strings have in common",
+		"exams": {"piscine_02": [5], "piscine_03": [1], "rank02": [2]}
+	},
+	"merged_chars": {
+		"skill": "Display the characters of two strings, without doubles",
+		"exams": {"piscine_02": [6], "piscine_03": [1], "rank02": [2]}
+	},
+	"hidden_word": {
+		"skill": "Find the letters of a word, in order, in another string",
+		"exams": {"piscine_02": [8], "piscine_03": [2], "rank02": [2]}
+	},
+	"hidden_order": {
+		"skill": "Tell whether a string hides another one, in order",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"read_number": {
+		"skill": "Turn a string written in base 10 into an int",
+		"exams": {"piscine_02": [5], "piscine_03": [1], "rank02": [2]}
+	},
+	"read_base_number": {
+		"skill": "Turn a string written in another base into an int",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"number_words": {
+		"skill": "Display numbers, some of them replaced by words",
+		"exams": {"rank02": [1]}
+	},
+	"print_in_base": {
+		"skill": "Display a number in another base with write",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"number_to_string": {
+		"skill": "Turn an int into a new string",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"base_to_string": {
+		"skill": "Turn an int into a new string in another base",
+		"exams": {"piscine_final": [3]}
+	},
+	"calculator": {
+		"skill": "A small calculator on the command line",
+		"exams": {"piscine_02": [7], "piscine_03": [2], "rank02": [2]}
+	},
+	"number_table": {
+		"skill": "Display a table of numbers computed from one number",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"prime_sum": {
+		"skill": "Add up prime numbers",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"common_divisor": {
+		"skill": "Find the greatest common divisor of two numbers",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"common_multiple": {
+		"skill": "Find the least common multiple of two numbers",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"prime_factors": {
+		"skill": "Break a number down into prime numbers",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"bit_reverse": {
+		"skill": "Reorder the bits of a byte",
+		"exams": {"piscine_02": [6], "piscine_03": [1], "rank02": [2]}
+	},
+	"bit_rotate": {
+		"skill": "Move the bits of a byte around",
+		"exams": {"piscine_02": [6], "piscine_03": [1], "rank02": [2]}
+	},
+	"bit_print": {
+		"skill": "Display the bits of a byte",
+		"exams": {"piscine_02": [8], "piscine_03": [2], "rank02": [2]}
+	},
+	"bit_test": {
+		"skill": "Tell a property of a number from its bits",
+		"exams": {"piscine_02": [8], "piscine_03": [2], "rank02": [2]}
+	},
+	"string_dup": {
+		"skill": "Copy a string into new memory allocated with malloc",
+		"exams": {"piscine_02": [5], "piscine_03": [1], "rank02": [2]}
+	},
+	"int_range": {
+		"skill": "Build a new array of ints with malloc",
+		"exams": {"piscine_03": [4], "piscine_final": [2], "rank02": [3]}
+	},
+	"int_range_back": {
+		"skill": "Build a new array of ints with malloc, from the end",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"string_split": {
+		"skill": "Split a string into an allocated array of words",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"array_search": {
+		"skill": "Find a value or its place in an array of ints",
+		"exams": {"piscine_02": [8], "piscine_03": [2], "rank02": [2]}
+	},
+	"array_sort": {
+		"skill": "Sort an array of ints in place",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"list_walk": {
+		"skill": "Go through a linked list to count or measure it",
+		"exams": {"piscine_03": [3], "piscine_final": [1], "rank02": [3]}
+	},
+	"list_apply": {
+		"skill": "Apply a function to the nodes of a linked list",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"list_remove": {
+		"skill": "Remove nodes from a linked list",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"list_sort": {
+		"skill": "Sort a linked list",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"list_cycle": {
+		"skill": "Detect a loop in a linked list",
+		"exams": {"piscine_final": [4]}
+	},
+	"grid_fill": {
+		"skill": "Fill an area of a grid",
+		"exams": {"piscine_final": [3], "rank02": [4]}
+	},
+	"grid_attack": {
+		"skill": "Check the pieces that attack a square of a board",
+		"exams": {"piscine_final": [3]}
+	},
+	"bracket_check": {
+		"skill": "Check the brackets of a string with a stack",
+		"exams": {"piscine_final": [4]}
+	},
+	"postfix_calc": {
+		"skill": "Evaluate an expression with a stack",
+		"exams": {"piscine_final": [4]}
+	},
+	"tiny_interpreter": {
+		"skill": "Run a program written in a tiny language",
+		"exams": {"piscine_final": [3]}
+	},
+	"memory_dump": {
+		"skill": "Display memory as hexadecimal and characters",
+		"exams": {"piscine_final": [4]}
+	},
+	"longest_part": {
+		"skill": "Find the longest part of a string with a property",
+		"exams": {"piscine_final": [4]}
+	},
+	"bracket_balance": {
+		"skill": "Check the brackets of a string with a stack",
+		"exams": {"rank03": [1]}
+	},
+	"multi_key_sort": {
+		"skill": "Sort strings on several keys without sorted()",
+		"exams": {"rank03": [1]}
+	},
+	"palindrome_check": {
+		"skill": "Read a string the same way from both ends",
+		"exams": {"rank03": [2]}
+	},
+	"matrix_flip": {
+		"skill": "Build a matrix turned or flipped from another",
+		"exams": {"rank03": [2]}
+	},
+	"subsequence_check": {
+		"skill": "Find the letters of a word, in order, in another string",
+		"exams": {"rank03": [3]}
+	},
+	"shared_chars": {
+		"skill": "Compare the characters of two strings",
+		"exams": {"rank03": [3]}
+	},
+	"base_convert": {
+		"skill": "Read and write numbers in a base from 2 to 36",
+		"exams": {"rank03": [3]}
+	},
+	"digit_pairs": {
+		"skill": "Count patterns of neighbouring digits in a string",
+		"exams": {"rank03": [3]}
+	},
+	"same_letters": {
+		"skill": "Compare strings by the letters they hold",
+		"exams": {"rank03": [4]}
+	},
+	"sorted_merge": {
+		"skill": "Merge two sorted lists in one pass",
+		"exams": {"rank03": [4]}
+	},
+	"char_multiset": {
+		"skill": "Count the characters of two strings",
+		"exams": {"rank03": [4]}
+	},
+	"case_alternate": {
+		"skill": "Change the case of letters by their position",
+		"exams": {"rank03": [5]}
+	},
+	"list_rotate": {
+		"skill": "Move the items of a list around",
+		"exams": {"rank03": [5]}
+	},
+	"letter_shift": {
+		"skill": "Shift letters in the alphabet",
+		"exams": {"rank03": [6]}
+	},
+	"rotation_check": {
+		"skill": "Tell whether a list is a rotation of another",
+		"exams": {"rank04": [1]}
+	},
+	"grid_plot": {
+		"skill": "Draw points on a grid of characters",
+		"exams": {"rank04": [1]}
+	},
+	"sorted_intersection": {
+		"skill": "Intersect sorted lists",
+		"exams": {"rank04": [2]}
+	},
+	"k_way_merge": {
+		"skill": "Merge many sorted lists",
+		"exams": {"rank04": [2]}
+	},
+	"palindrome_cuts": {
+		"skill": "Cut a string into palindromes with dynamic programming",
+		"exams": {"rank04": [3]}
+	},
+	"dependency_order": {
+		"skill": "Order items so that each comes after what it needs",
+		"exams": {"rank04": [3]}
+	},
+	"window_max": {
+		"skill": "Compute a value over each window of a list",
+		"exams": {"rank04": [4]}
+	},
+	"run_length": {
+		"skill": "Encode and decode runs of characters",
+		"exams": {"rank05": [1]}
+	},
+	"spiral_fill": {
+		"skill": "Fill a matrix along a path",
+		"exams": {"rank05": [1]}
+	},
+	"interval_rooms": {
+		"skill": "Share out time intervals",
+		"exams": {"rank05": [1]}
+	},
+	"graph_cycle": {
+		"skill": "Find a cycle in a directed graph",
+		"exams": {"rank05": [2]}
+	},
+	"grid_regions": {
+		"skill": "Count the regions of a grid",
+		"exams": {"rank05": [2]}
+	},
+	"grid_word_search": {
+		"skill": "Find words in a grid in every direction",
+		"exams": {"rank05": [3]}
+	},
+	"word_steps": {
+		"skill": "Find the shortest chain of words with a breadth-first search",
+		"exams": {"rank05": [3]}
+	},
+	"prefix_tree": {
+		"skill": "Write a class that stores words in a prefix tree",
+		"exams": {"rank06": [1]}
+	},
+	"string_packing": {
+		"skill": "Pack a list of strings into one string and back",
+		"exams": {"rank06": [1]}
+	},
+	"task_schedule": {
+		"skill": "Order tasks that depend on each other",
+		"exams": {"rank06": [1]}
+	},
+	"extra_edge": {
+		"skill": "Find the edge that closes a cycle in a graph",
+		"exams": {"rank06": [1]}
+	},
+	"prefix_complete": {
+		"skill": "Complete words from a prefix",
+		"exams": {"rank06": [1]}
+	},
+	"disjoint_sets": {
+		"skill": "Write a class that joins sets and finds their leaders",
+		"exams": {"rank06": [2]}
+	},
+	"lru_cache": {
+		"skill": "Write a class that keeps the most recently used values",
+		"exams": {"rank06": [2]}
+	},
+	"binary_heap": {
+		"skill": "Write a class that keeps the smallest value on top",
+		"exams": {"rank06": [2]}
+	},
+	"graph_bridges": {
+		"skill": "Find the edges a graph cannot lose",
+		"exams": {"rank06": [2]}
+	}
+}

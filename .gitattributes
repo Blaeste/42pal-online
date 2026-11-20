@@ -1,0 +1,17 @@
+# What the archives of a release leave out (git archive, and the "Source
+# code" zip and tar.gz of GitHub): only what runs 42pal goes in. A git clone
+# still has everything, for the contributors.
+
+# The tests and the plan of the project.
+/tests/ export-ignore
+/docs/plans/ export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+/.github/ export-ignore
+/tools/ export-ignore
+
+# The reference solutions, used by ./42pal check-catalog only: a ref.c or
+# ref.py per exercise, and the header a student hands in for list_drop.
+/exercises/**/ref.c export-ignore
+/exercises/**/ref.py export-ignore
+/exercises/c/list_drop/node.h export-ignore

@@ -1,0 +1,28 @@
+42pal License
+
+Copyright (c) 2026 Blaeste. All rights reserved, except what this license
+allows below.
+
+1. Use. Anyone may download, install and run 42pal, free of charge, to train
+   for exams or to help others train, alone or in a school.
+
+2. Exercises. Anyone may write new exercises for 42pal and use them: an
+   exercise is a folder under exercises/ (its exercise.py and its reference
+   solution), with its entries in themes.json and in exams/. Exercises may be
+   shared, and proposed to this repository; an exercise proposed to this
+   repository may be included in 42pal and distributed under this license.
+
+3. Code. Apart from adding exercises as above, the code of 42pal may not be
+   changed: no modified version of 42pal, or of a part of its code, may be
+   published or distributed, and its code may not be reused in another
+   program. Fixes and ideas are welcome as issues or pull requests in this
+   repository; the author decides what goes in.
+
+4. Copies. Copies of 42pal may be shared only unchanged, complete with this
+   license, and free of charge.
+
+5. Libraries. The libraries in vendor/ keep their own licenses, which are in
+   vendor/LICENSES/.
+
+6. No warranty. 42pal is given as it is, without any warranty. The author is
+   not liable for any damage or loss that comes from its use.

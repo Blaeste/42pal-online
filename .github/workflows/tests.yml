@@ -1,0 +1,53 @@
+# The tests at each push and pull request, on the oldest Python 42pal
+# supports and a recent one. Only what changed is checked, with what it can
+# break (tools/ci_scope.py): a change to the docs alone starts nothing, a
+# change to some exercises checks those exercises, and a change to the core
+# checks every exercise. Pushing a tag starts nothing: its commit was
+# tested when it was pushed to a branch.
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore: ["**.md", "docs/**", "LICENSE", ".github/ISSUE_TEMPLATE/**"]
+  pull_request:
+    paths-ignore: ["**.md", "docs/**", "LICENSE", ".github/ISSUE_TEMPLATE/**"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The history, to see what changed since the commit before.
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: what changed
+        id: scope
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          scope="$(python tools/ci_scope.py "$base" "${{ github.sha }}")"
+          echo "Exercises checked: $scope"
+          echo "exercises=$scope" >> "$GITHUB_OUTPUT"
+      - name: clang as cc, and valgrind, like on the campus machines
+        run: |
+          # The mirrors of Ubuntu fail now and then: up to 3 tries.
+          for attempt in 1 2 3; do
+            sudo apt-get update -q && sudo apt-get install -y -q clang valgrind && break
+            echo "apt-get failed (try $attempt), again in 15 s"
+            sleep 15
+          done
+          command -v clang valgrind
+          mkdir -p "$HOME/bin"
+          ln -s "$(command -v clang)" "$HOME/bin/cc"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: tests, with check-catalog on the exercises checked
+        env:
+          PAL42_EXERCISES: ${{ steps.scope.outputs.exercises }}
+        run: python -m unittest

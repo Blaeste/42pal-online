@@ -1,0 +1,174 @@
+/* The look of the full-screen interface (see tui.py): a dark background,
+   rounded cards, violet for what matters. Small terminals (under 30 lines)
+   get the "-compact" class: the logo on one line, no tagline. */
+
+Screen {
+	background: #0f1117;
+	color: #d1d5db;
+}
+
+/* --- menus and login --------------------------------------------------- */
+
+MenuScreen, LoginScreen, PassphraseScreen {
+	align: center middle;
+}
+
+.root {
+	width: 64;
+	height: auto;
+}
+
+.logo {
+	width: 100%;
+	height: 6;
+	content-align: center middle;
+}
+
+.tagline {
+	width: 100%;
+	content-align: center middle;
+	color: #6b7280;
+	margin-bottom: 1;
+}
+
+.-compact .logo { height: 1; }
+.-compact .tagline { display: none; }
+.-compact .details { margin-top: 0; }
+.-compact .hints { margin-top: 0; }
+
+.card {
+	height: auto;
+	border: round #2a2f3a;
+	border-title-color: #a5b4fc;
+	border-title-style: bold;
+	padding: 1 1 0 1;
+	background: #151821;
+}
+
+OptionList, OptionList:focus {
+	height: auto;
+	max-height: 16;
+	border: none;
+	background: #151821;
+	background-tint: #000000 0%;
+	padding: 0;
+	scrollbar-size: 0 0;
+}
+
+OptionList > .option-list--option {
+	padding: 0 2;
+}
+
+OptionList > .option-list--option-hover {
+	background: #1e2230;
+}
+
+OptionList > .option-list--option-highlighted,
+OptionList:focus > .option-list--option-highlighted {
+	background: #262b45;
+	color: #e0e7ff;
+}
+
+OptionList > .option-list--separator {
+	color: #2a2f3a;
+}
+
+/* A fixed height: details of 1 or 3 lines must not move the centered menu. */
+.details {
+	height: 3;
+	padding: 0 1;
+	margin-top: 1;
+	color: #9ca3af;
+	border-left: outer #a5b4fc;
+}
+
+.hints {
+	width: 100%;
+	content-align: center middle;
+	margin-top: 1;
+	color: #4b5563;
+}
+
+LoginScreen Input, PassphraseScreen Input {
+	margin-bottom: 1;
+	background: #0f1117;
+	border: tall #2a2f3a;
+}
+
+LoginScreen Input:focus, PassphraseScreen Input:focus {
+	border: tall #a5b4fc;
+}
+
+.field-label {
+	color: #9ca3af;
+	padding: 0 1;
+}
+
+/* --- exam and practice ------------------------------------------------- */
+
+SessionScreen {
+	layout: vertical;
+}
+
+#header {
+	height: 3;
+	padding: 0 2;
+	border: round #2a2f3a;
+	border-title-color: #a5b4fc;
+	border-title-style: bold;
+	background: #151821;
+}
+
+#body {
+	height: 1fr;
+}
+
+#subject-pane {
+	height: 3fr;
+	border: round #2a2f3a;
+	border-title-color: #a5b4fc;
+	background: #0f1117;
+	padding: 0 1;
+	scrollbar-size: 1 1;
+}
+
+#log {
+	height: 2fr;
+	border: round #2a2f3a;
+	border-title-color: #a5b4fc;
+	background: #0f1117;
+	padding: 0 1;
+	scrollbar-size: 1 1;
+}
+
+/* A wide terminal puts the subject and the log side by side. */
+.-wide #body { layout: horizontal; }
+.-wide #subject-pane { width: 1fr; height: 100%; }
+.-wide #log { width: 1fr; height: 100%; }
+
+#activity {
+	height: 1;
+	padding: 0 2;
+	color: #fbbf24;
+	display: none;
+}
+
+#activity.-busy {
+	display: block;
+}
+
+#command {
+	background: #151821;
+	border: tall #2a2f3a;
+	padding: 0 1;
+}
+
+#command:focus {
+	border: tall #a5b4fc;
+}
+
+#session-hints {
+	height: 1;
+	padding: 0 2;
+	color: #4b5563;
+}

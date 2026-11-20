@@ -1,0 +1,5 @@
+# Python bytecode cache, regenerated automatically
+__pycache__/
+
+# The plain code of the cheat menu: on the owner's machine only (see pal42/cheat.py).
+/cheat/
