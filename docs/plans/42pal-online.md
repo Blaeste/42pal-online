@@ -73,6 +73,12 @@ Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 4
 
 Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (commandes à copier et sortie attendue).
 
+**Avancement (2026-11-20)** : phases 1, 2 et 3 faites, sauf ce qui attend le propriétaire (phase 0) et la relecture du protocole (2.1).
+
+- 1.1, 1.2 : les deux dépôts, CI verte ; le serveur teste sur SQLite et PostgreSQL.
+- 2.1 à 2.5 : `docs/protocol.md` ; connexion 42 (faux intra dans les tests), consentement avant tout compte, politique de confidentialité (nom et contact du responsable par `PAL42_CONTROLLER` et `PAL42_CONTACT`), suppression du compte ; `./42pal login` et `logout` ; un test bloque le réseau et vérifie que les modes hors ligne n'y touchent pas.
+- 3.1 à 3.5 : tirage à graine secrète, durée, attentes « hard », niveaux, fin au temps écoulé ; file de grademe et worker ; bac à sable Docker (pas de réseau, lecture seule, nobody, limites) ; **valgrind marche sous gVisor** (job de la CI avec `runsc`) ; tests à graine secrète (`extra_seeds` dans le cœur) ; `./42pal ranked` ; un test de bout en bout fait passer un niveau au client du sous-module contre le serveur lancé.
+
 ### Phase 0 — Préalables (sans code, par le propriétaire)
 
 - **0.1** ~~Lire la doc et les CGU de l'API~~ (fait le 2026-11-20, voir plus haut). Reste : présenter le projet à la pédagogie du campus avant l'ouverture (42 peut contrôler les apps), puis demander le rôle « Official App » quand l'app sera prête. *Vérif* : réponse écrite.
@@ -136,6 +142,9 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 - **Charge** : tous les campus, chaque grademe recompilé. File, limites, VPS qu'on peut agrandir.
 - **Coupures réseau en exam** : trous, donc revue, pas refus.
 - **La v1 figée ne reçoit plus de nouveaux exercices.**
+- **Un rendu Python peut lire l'oracle** (`exercise.py`) dans le bac à sable pendant l'exécution, s'il a le droit d'ouvrir des fichiers : l'anticheat (5.1) signale `open`, `exec`, `importlib` dans un rendu Python. Les ref ne sont pas dans l'image.
+- **Docker rootless** (cette machine) ne sait pas limiter le CPU : `PAL42_SANDBOX_CPUS` vide ; sur le VPS, Docker normal avec gVisor.
+- **Avant la première mise en ligne** : des migrations de base (Alembic), le ménage des lignes expirées (sessions, appairages, consentements en attente), la remise en file des grademe d'un worker tombé, une taille maximale des requêtes (Caddy), une limite de requêtes par compte.
 - **RGPD** : le propriétaire est responsable du traitement. Hébergement en Europe, page de confidentialité, registre des traitements.
 
 ## Questions ouvertes (avec la recommandation)
