@@ -21,8 +21,8 @@ Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 4
 - **Public** : tous les campus 42, leaderboard par campus et global.
 - **Hébergement** : un VPS payant en Europe, conteneurs isolés pour chaque grademe.
 - **Leaderboard** : par exam (meilleure note validée, puis le temps), score global (somme des meilleures notes), saisons qui repartent à zéro avec archive, stats publiques par exercice et par thème, points faibles personnels privés.
-- **Affichage** : un site web (classements, stats, connexion, revue) et un menu LEADERBOARD dans 42pal.
-- **Vie privée** : mode classé sur consentement explicite ; le leaderboard montre le login et le campus ; le code et les instantanés sont effacés après 90 jours (les notes et les temps restent) ; chacun peut supprimer son compte.
+- **Affichage** : un site web (classements, stats, connexion, revue) et un menu LEADERBOARD dans 42pal. **Le site est réservé aux membres du réseau 42 connectés** : aucune page publique, aucune indexation (CGU de l'API, art. 3 et 4.1).
+- **Vie privée** : mode classé sur consentement écrit (case à cocher, preuve gardée, retrait possible à tout moment) ; le leaderboard montre le login et le campus aux seuls membres 42 connectés ; le code et les instantanés sont effacés après 90 jours (les notes et les temps restent) ; chacun peut voir, exporter et supprimer ses données.
 - **Ce que le programme et le site affichent est en anglais**, comme la v1.
 
 ## Architecture
@@ -55,9 +55,19 @@ Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 4
 - **`GET /v2/me`** donne `id`, `login`, `kind`, `staff?`, `alumni?`, `active?`, `pool_month`, `pool_year`, `cursus_users` (cursus `piscine-c`, `42cursus`…, avec `blackholed_at`), `campus` et `campus_users` (avec `is_primary`). Il donne aussi l'e-mail, les noms, le téléphone et la photo : **le serveur ne les garde pas**.
 - **Ce que le serveur garde** : l'`id` 42, le `login`, le campus principal (id, nom), le type de compte, `active?` et les cursus. Le jeton 42 ne sert qu'à la connexion (un seul appel à `/v2/me`), puis le serveur donne son propre jeton : aucun appel à l'API 42 pendant un exam.
 - **Limites** : 2 requêtes par seconde et 1200 par heure pour toute l'app. Une connexion coûte 2 requêtes, soit environ 600 connexions par heure. Le rôle « Official App », demandé par mail à 42 quand l'app est prête et publique, relève ces limites.
-- **Jetons** : 7200 s de validité dans les exemples ; `GET https://api.intra.42.fr/oauth/token/info` donne le temps restant.
+- **Jetons** : valables 2 heures ; `GET https://api.intra.42.fr/oauth/token/info` donne le temps restant.
+- **Secret de l'app** : il change automatiquement tous les mois (CGU de l'API, art. 3.2). Le serveur le lit dans sa configuration ; un échange de code refusé signale qu'il faut le remplacer.
 - **App créée** : « 42PAL », type « 42 Pedagogical Project ». Restent à régler : la vraie redirection (pour l'instant un placeholder) et le scope `public` à cocher.
-- **Encore à lire** : les « API General Terms of Use » (`https://profile.intra.42.fr/legal/terms/33`), visibles seulement une fois connecté.
+
+## CGU de l'API (version du 08.01.2025, lues le 2026-11-20)
+
+- **Art. 1** : une app doit être bénéfique au réseau 42 (pédagogie, outils) ; 42 peut la contrôler, au hasard ou sur signalement, et couper l'accès. Les candidats à l'entrée et les anciens étudiants qui ne sont pas alumni n'ont pas accès à l'API ; les alumni, si.
+- **Art. 3** : les données de l'API restent dans le réseau 42 ; les garder en local demande le consentement préalable de la personne.
+- **Art. 4.1** : interdit de mettre les données dans un annuaire, un moteur de recherche ou hors de l'environnement 42 ; interdit de les collecter ou de les garder sans consentement écrit préalable. Les données « anonymisées, agrégées ou dérivées » comptent aussi.
+- **Art. 4.2** : consentement explicite, libre et éclairé ; politique de confidentialité (selon les recommandations de la CNIL) ; preuve du consentement gardée ; retrait possible à tout moment ; politique fournie à 42 sur demande.
+- **Art. 4.3** : sécurité : confidentialité et intégrité, sauvegardes, gestion des accès, protection des serveurs, chiffrement en transit et au repos, pseudonymisation.
+- **Art. 4.4 et 4.5** : un moyen simple de demander l'accès, la modification ou la suppression ; tout supprimer quand ce n'est plus utile, quand le service s'arrête, quand 42 le demande ou quand la personne le demande.
+- **Art. 6** : un risque de sécurité ou une fuite de clés se signale à security@42.fr ; les clés compromises se révoquent tout de suite.
 
 ## Étapes
 
@@ -65,7 +75,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 
 ### Phase 0 — Préalables (sans code, par le propriétaire)
 
-- **0.1** Lire la doc de l'API 42 en étant connecté (endpoints OAuth, champs de `/v2/me`, limites de requêtes, règles des apps) et demander à 42 l'accord pour un leaderboard public avec les logins (CGU de l'intra, article 6). *Vérif* : réponse écrite de 42, champs confirmés notés ici.
+- **0.1** ~~Lire la doc et les CGU de l'API~~ (fait le 2026-11-20, voir plus haut). Reste : présenter le projet à la pédagogie du campus avant l'ouverture (42 peut contrôler les apps), puis demander le rôle « Official App » quand l'app sera prête. *Vérif* : réponse écrite.
 - **0.2** Créer l'app sur l'intra (redirection `https://<domaine>/auth/callback`, plus une redirection locale pour le développement). Le secret va dans un gestionnaire de mots de passe, jamais dans un dépôt.
 - **0.3** Le VPS en Europe (celui d'OVH prévu dans le plan de la v1 ?) et le nom de domaine. *Vérif* : ssh, puis une page « hello » en HTTPS.
 
@@ -80,7 +90,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 - **2.2** Serveur : OAuth 42, table des utilisateurs (login, campus principal, type), refus des comptes non étudiants ou inactifs. *Vérif* : tests contre un faux serveur 42.
 - **2.3** Serveur : appairage du terminal, jetons hachés et révocables. *Vérif* : test d'un appairage complet.
 - **2.4** Client : `./42pal login` et `logout`. *Vérif* : tests contre un faux serveur local ; un test bloque le réseau et vérifie que les modes hors ligne n'ouvrent aucune connexion.
-- **2.5** Client et site : écran de consentement (ce qui est envoyé, ce qui est public, 90 jours). *Vérif* : refuser ne crée pas de compte.
+- **2.5** Client et site : écran de consentement (ce qui est envoyé, qui le voit, 90 jours), case à cocher, preuve gardée (date et version de la politique), retrait possible à tout moment ; page de politique de confidentialité selon les recommandations de la CNIL. *Vérif* : refuser ne crée pas de compte ; la preuve du consentement est enregistrée ; le retrait efface le compte.
 
 ### Phase 3 — Exam classé, sans anticheat
 
@@ -108,17 +118,18 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 ### Phase 7 — Leaderboard et stats
 
 - **7.1** Serveur : classement par exam, score global, saisons avec archive, filtre par campus, stats par exercice et par thème, points faibles personnels. *Vérif* : tests sur des jeux de données.
-- **7.2** Pages web. **7.3** Menu LEADERBOARD dans le client. *Vérif* : tests, essai à la main.
+- **7.2** Pages web, réservées aux membres 42 connectés (pas de page publique, `noindex`, `robots.txt` qui interdit tout). **7.3** Menu LEADERBOARD dans le client. *Vérif* : une page de classement ouverte sans connexion renvoie vers la connexion ; tests, essai à la main.
 
 ### Phase 8 — Vie privée et mise en ligne
 
-- **8.1** Effacement à 90 jours, suppression de compte (site et `./42pal online delete-account`), page de confidentialité. *Vérif* : tests.
-- **8.2** Déploiement Docker Compose (Caddy pour le HTTPS, l'app, les workers, PostgreSQL), sauvegardes quotidiennes hors du VPS, surveillance. *Vérif* : restauration réussie d'une sauvegarde, test de charge à 100 grademe simultanés.
+- **8.1** Effacement à 90 jours ; voir, exporter, modifier et supprimer ses données, depuis un lien facile à trouver (site et `./42pal online delete-account`) ; tout effacer si 42 le demande ou si le service s'arrête. *Vérif* : tests.
+- **8.2** Déploiement Docker Compose (Caddy pour le HTTPS, l'app, les workers, PostgreSQL), chiffrement au repos (disque ou base) et des sauvegardes, sauvegardes quotidiennes hors du VPS, accès au serveur par clé SSH seulement, surveillance, rappel mensuel pour le secret de l'app. *Vérif* : restauration réussie d'une sauvegarde, test de charge à 100 grademe simultanés.
 - **8.3** Bêta fermée, puis ouverture campus par campus après l'accord de 42.
 
 ## Risques
 
-- **CGU de l'intra (article 6)** : interdiction de collecter les données des autres utilisateurs (login, campus…) pour un autre usage que l'intra, notamment des « annuaires » publics. Sans accord de 42 : leaderboard visible seulement par les gens connectés, ou pseudos.
+- **Règles de 42** (CGU de l'intra art. 6, CGU de l'API art. 1, 3 et 4) : les données ne sortent pas du réseau 42 → tout le classement est derrière la connexion 42, avec consentement écrit. 42 peut contrôler l'app et couper l'accès : présenter le projet à la pédagogie avant d'ouvrir.
+- **Secret de l'app renouvelé chaque mois** : oublié, plus personne ne peut se connecter. Rappel mensuel et alerte au premier échange refusé.
 - **Exécuter du code d'inconnus** : évasion de conteneur possible. Parades : gVisor, aucun secret dans les workers, idéalement une VM à part pour eux.
 - **La détection d'IA est peu fiable** : jamais de refus sur le style seul.
 - **Un client modifié peut simuler une frappe en temps réel** : coûteux, et les valeurs aberrantes partent en revue. Aucun anticheat côté client n'est parfait.
@@ -133,7 +144,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 2. **Saisons** : le mois calendaire.
 3. **Langue du site** : l'anglais, comme le programme.
 4. **VPS** : réutiliser le VPS OVH du plan de la v1, s'il a la place pour des conteneurs (gVisor demande un noyau qui le permet).
-5. **Qui peut jouer en classé** : `/v2/me` distingue les étudiants actifs, les piscineux (cursus `piscine-c`), les alumni et le staff. Recommandation : étudiants actifs et piscineux, avec un leaderboard à part pour la piscine ; le staff seulement comme relecteur.
+5. **Qui peut jouer en classé** : `/v2/me` distingue les étudiants actifs, les piscineux (cursus `piscine-c`), les alumni et le staff. Les CGU de l'API (art. 1) refusent l'accès aux candidats à l'entrée et aux anciens étudiants qui ne sont pas alumni. Recommandation : étudiants actifs et alumni ; les piscineux seulement si 42 le confirme par écrit (le mode hors ligne reste ouvert à tous) ; le staff seulement comme relecteur.
 
 ## Hors périmètre
 
