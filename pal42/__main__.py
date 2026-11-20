@@ -71,7 +71,7 @@ def main(argv=None):
 		return delete_account_main()
 	if arguments.command == "ranked":
 		from pal42.cli.ranked import main as ranked_main
-		return ranked_main()
+		return ranked_main(full_screen=screen)
 	if arguments.command == "leaderboard":
 		from pal42.cli.leaderboard import main as leaderboard_main
 		return leaderboard_main(arguments.exam, arguments.season, arguments.campus, piscine=arguments.piscine)

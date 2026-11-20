@@ -209,14 +209,15 @@ class TestShell(unittest.TestCase):
 		self.assertNotIn("my-secret-password", repr(vars(shell)))
 
 	def test_the_first_menu_asks_piscine_or_student(self):
-		"""5 and x are refused; 1 is the piscine, 2 the students, 3 practice; 4 quits."""
-		shell = make_shell(Script("5", "x", "1"), self.root)
+		"""6 and x are refused; 1 is the piscine, 2 the students, 3 practice, 4 ranked; 5 quits."""
+		shell = make_shell(Script("6", "x", "1"), self.root)
 		self.assertEqual(shell.choose_audience(), "piscine")
 		text = output(shell)
 		self.assertIn("1. Piscine (piscineux)", text)
 		self.assertIn("2. Student (cursus)", text)
 		self.assertIn("3. Practice", text)
-		self.assertIn("4. Quit", text)
+		self.assertIn("4. Ranked", text)
+		self.assertIn("5. Quit", text)
 		self.assertEqual(text.count("Invalid choice"), 2)
 		self.assertEqual(make_shell(Script("2"), self.root).choose_audience(), "student")
 
@@ -275,7 +276,7 @@ class TestShell(unittest.TestCase):
 
 	def test_back_from_the_practice_menus_goes_to_the_first_menu(self):
 		"""Back from the languages: the first menu again, then quit."""
-		script = Script("", "pw", "3", "3", "4")
+		script = Script("", "pw", "3", "3", "5")
 		shell = make_shell(script, self.root)
 		shell.run()
 		text = output(shell)
@@ -291,8 +292,8 @@ class TestShell(unittest.TestCase):
 		self.assertEqual(output(shell).count("Choose the mode:"), 2)
 
 	def test_quit_in_the_first_menu_starts_no_exam(self):
-		"""4 in the first menu: goodbye, no subject, no examshell."""
-		script = Script("", "pw", "4")
+		"""5 in the first menu: goodbye, no subject, no examshell."""
+		script = Script("", "pw", "5")
 		shell = make_shell(script, self.root)
 		shell.run()
 		self.assertIsNone(shell.exam)
@@ -300,14 +301,14 @@ class TestShell(unittest.TestCase):
 		self.assertNotIn("examshell>", script.prompts)
 
 	def test_the_first_menu_shown_quits_even_when_it_is_the_mode(self):
-		"""One exam only: the mode menu comes first, and its last choice is Quit."""
+		"""One exam only: the first menu still comes (Ranked is in it), and its last choice is Quit."""
 		console = Console(file=io.StringIO(), width=100, color_system=None)
-		script = Script("", "pw", "3")
+		script = Script("", "pw", "4")
 		shell = Shell(console, script.ask, script.ask_password, Workspace(self.root),
 			rng=Random(1), clock=FakeClock(), sleep=lambda seconds: None,
 			catalog=ECHO_CATALOG, themes=ECHO_THEMES)
 		shell.run()
-		self.assertIn("3. Quit", output(shell))
+		self.assertIn("4. Quit", output(shell))
 		self.assertIsNone(shell.exam)
 
 	def test_a_single_exam_is_taken_without_asking(self):

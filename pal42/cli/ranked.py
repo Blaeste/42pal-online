@@ -33,6 +33,9 @@ class RankedShell(Shell):
 	api is the online.Api of the logged-in terminal.
 	"""
 
+	# The screens tell a ranked exam by it (no cheat menu, its own header).
+	ranked = True
+
 	def __init__(self, console, ask, api, workspace=None, clock=time.time, sleep=time.sleep, catalog=None, themes=None,
 			snapshot_interval=INTERVAL):
 		super().__init__(console, ask, None, workspace=workspace, clock=clock, sleep=sleep, mode="exam",
@@ -43,33 +46,44 @@ class RankedShell(Shell):
 		self.snapshots = Snapshots(api, self._read_rendu, snapshot_interval)
 
 	def run(self):
-		"""Resume the exam the server has in progress, or start one; then the commands."""
+		"""Resume the exam the server has in progress, or start one; then the commands.
+
+		Return True once an exam was played, False when none was (Back in
+		the menu, an error said, Ctrl-D).
+		"""
 		try:
-			state = self._current()
+			state = self.current_state()
 			if state is None:
 				# The exams of the piscine for an account of the piscine, else those of the cursus.
 				_, me = self.api.request("GET", "/me")
 				exam = self.choose_exam("piscine" if me.get("kind") == "pool" else "student", first=True)
 				if exam is BACK:
-					self.console.print("Goodbye!")
-					return
+					return False
 				_, state = self.api.request("POST", "/exams", {"exam": exam.id})
 			else:
 				self.console.print("Your ranked exam in progress resumes.")
 		except online.OnlineError as error:
 			self._say_error(error)
-			return
+			return False
 		except EOFError:
-			self.console.print("\nGoodbye!")
-			return
-		self.follow(state)
-		self.show_subject()
-		self.snapshots.start()
+			return False
+		self.start_ranked(state)
 		try:
 			self.command_loop()
 		finally:
 			# Already stopped at the end of the exam; here for Ctrl-C.
 			self.snapshots.stop()
+		return True
+
+	def start_ranked(self, state):
+		"""Take the exam the server gave, show its subject, start the snapshots."""
+		self.follow(state)
+		self.show_subject()
+		self.snapshots.start()
+
+	def current_state(self):
+		"""The state of the exam in progress on the server, or None."""
+		return self._current()
 
 	def _current(self):
 		"""The state of the exam in progress on the server, or None."""
@@ -194,19 +208,43 @@ class RankedShell(Shell):
 		self.console.print("Unknown command: cheat. Type help for the list.")
 		return False
 
-def main(console=None, credentials=None):
-	"""./42pal ranked; return the exit code."""
+def from_menu(console, ask, workspace, catalog=None, themes=None, credentials=None, server=None,
+		open_browser=None, sleep=time.sleep):
+	"""Ranked, chosen in the first menu of the examshell: log in if needed, then the exam.
+
+	Return True once an exam was played, False to go back to the menu.
+	"""
+	from pal42.cli.online import login
 	credentials = credentials or online.CREDENTIALS
+	server = server or online.server_url()
 	saved = online.load_credentials(credentials)
-	if saved is None:
-		(console or Console()).print("Log in first: ./42pal login")
-		return 1
-	console, ask, _ = terminal(COMMANDS)
-	shell = RankedShell(console, ask, online.Api(saved["server"], saved["token"]),
-		workspace=Workspace(remote=STATE_DIR / "rendu.git"))
+	if saved is None or saved["server"] != server:
+		if login(console, server, credentials, open_browser=open_browser, sleep=sleep) != 0:
+			return False
+		saved = online.load_credentials(credentials)
+	shell = RankedShell(console, ask, online.Api(saved["server"], saved["token"]), workspace=workspace,
+		catalog=catalog, themes=themes)
+	return shell.run()
+
+def main(console=None, credentials=None, full_screen=False, server=None):
+	"""./42pal ranked; return the exit code (1: not logged in). In full screen, the app opens on Ranked."""
+	workspace = Workspace(remote=STATE_DIR / "rendu.git")
+	if full_screen:
+		from pal42.cli.tui import run_ranked
+		return run_ranked(workspace)
+	console_given = console
+	if console is None:
+		console, ask, _ = terminal(COMMANDS)
+	else:
+		ask = input
 	try:
-		shell.run()
+		played = from_menu(console, ask, workspace, credentials=credentials, server=server)
 	except KeyboardInterrupt:
 		console.print("\nExam stopped (Ctrl-C): the server keeps it; run ./42pal ranked to resume it.")
 		return 130
+	if not played:
+		if online.load_credentials(credentials or online.CREDENTIALS) is None:
+			return 1
+		if console_given is None:
+			console.print("Goodbye!")
 	return 0

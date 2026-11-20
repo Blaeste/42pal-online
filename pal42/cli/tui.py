@@ -6,16 +6,21 @@ the commands typed, and shows what they print. Its look is in tui.tcss.
 
 The flow: a fake login, the saved exam to resume if any, then the menus
 (who, which exam, which mode, which level), each with a last choice to go
-back; then the session screen, until the exam ends.
+back; then the session screen, until the exam ends. Ranked, in the first
+menu, is 42pal online: the 42 login of the terminal if needed, then the
+ranked exam the server draws, times and grades, on the same session screen.
 """
 
 import asyncio
+import functools
 import getpass
 import io
+import os
 import re
 import shutil
 import subprocess
 import sys
+import threading
 from urllib.parse import unquote, urlparse
 
 from rich.console import Console
@@ -36,19 +41,34 @@ from textual.widgets.option_list import Option
 from pal42 import cheat
 from pal42.cli import display
 from pal42.cli.practice import PRACTICE_COMMANDS, PRACTICE_SHORTCUTS, PracticeShell
-from pal42.cli.shell import BACK, COMMANDS, PRACTICE, PROGRESS, SHORTCUTS, Shell
+from pal42.cli.shell import BACK, COMMANDS, PRACTICE, PROGRESS, RANKED, SHORTCUTS, Shell
 from pal42.exam import AUDIENCES
 from pal42.progress import exam_rows, summary, weak_themes
 from pal42.session import SessionStore
 from pal42.update import apply_update, restart
 
-LOGO = [
+LETTERS = [
 	"██╗  ██╗██████╗ ██████╗  █████╗ ██╗     ",
 	"██║  ██║╚════██╗██╔══██╗██╔══██╗██║     ",
 	"███████║ █████╔╝██████╔╝███████║██║     ",
 	"╚════██║██╔═══╝ ██╔═══╝ ██╔══██║██║     ",
 	"     ██║███████╗██║     ██║  ██║███████╗",
 	"     ╚═╝╚══════╝╚═╝     ╚═╝  ╚═╝╚══════╝",
+]
+# The left half of a handlebar moustache, its curl outside; the right half
+# is its mirror. With the letters: 64 columns, the width of the cards.
+MOUSTACHE = [
+	"           ",
+	" ▄▀▀▄      ",
+	"▐▌ ▄▀      ",
+	" ▀▀▄▄▄▄▄▄▄▄",
+	"   ▀▀█████▀",
+	"           ",
+]
+MIRRORED = str.maketrans("▌▐", "▐▌")
+LOGO = [
+	f"{left} {letters.ljust(40)} {left[::-1].translate(MIRRORED)}"
+	for left, letters in zip(MOUSTACHE, LETTERS)
 ]
 
 # The colors the logo goes through, cyan to violet; they move slowly.
@@ -235,6 +255,60 @@ class PassphraseScreen(Screen):
 
 	def action_cancel(self):
 		self.dismiss("")
+
+class LoginStopped(Exception):
+	"""Escape on the screen of the 42 login: the terminal stops waiting."""
+
+class PairingScreen(IntroScreen):
+	"""The 42 login of this terminal: the page to open, the code to compare, the wait.
+
+	The app waits for the login in a thread, which calls wait(seconds)
+	between two questions to the server; Escape makes it raise LoginStopped.
+	"""
+
+	BINDINGS = [("escape", "cancel", "Cancel")]
+
+	def __init__(self, pairing):
+		super().__init__()
+		self.pairing = pairing
+		self.cancelled = threading.Event()
+
+	def compose(self) -> ComposeResult:
+		url, code = self.pairing["login_url"], self.pairing["user_code"]
+		with Vertical(classes="root"):
+			yield Static(classes="logo")
+			yield Static("42pal online", classes="tagline")
+			with Vertical(classes="card"):
+				yield Static("Open this page and log in with your 42 account:", classes="field-label")
+				yield Static(Text(url, style=open_on_click(url)), classes="pairing-link")
+				yield Static("Check that the page shows this code:", classes="field-label")
+				yield Static(" ".join(code), classes="pairing-code")
+				yield Static("⠿ Waiting for the login in your browser…", classes="pairing-wait")
+			yield Static(hints([("click", "open the page"), ("esc", "cancel")]), classes="hints")
+
+	def on_mount(self):
+		self.query_one(".logo").remove()
+		self.query_one(".root").mount(Logo(classes="logo"), before=0)
+		self.query_one(".card").border_title = " Log in with 42 "
+		self.call_after_refresh(self.animate_in)
+
+	def action_cancel(self):
+		self.cancelled.set()
+
+	def wait(self, seconds):
+		"""Wait `seconds` before asking the server again, or raise LoginStopped (Escape)."""
+		if self.cancelled.wait(seconds):
+			raise LoginStopped()
+
+@functools.lru_cache(maxsize=1)
+def ranked_shell_class():
+	"""The ranked shell for the screens, made when Ranked is first chosen.
+
+	Not at import: pal42.online, and so the network, load for Ranked only.
+	"""
+	from pal42.cli.ranked import RankedShell
+	return type("ScreenRankedShell", (ScreenShellMixin, RankedShell),
+		{"__doc__": "The examshell of a ranked exam, for the full-screen interface."})
 
 class MenuScreen(IntroScreen):
 	"""A menu: a choice per item, then Back (or Quit in the first menu).
@@ -521,9 +595,10 @@ class SessionScreen(Screen):
 			header.update(text)
 			return
 		exam = shell.exam
-		header.border_title = f" 42pal · {exam.title} "
+		ranked = getattr(shell, "ranked", False)
+		header.border_title = f" 42pal online · ranked · {exam.title} " if ranked else f" 42pal · {exam.title} "
 		text.append(f"level {shell.level} of {exam.level_count}", style="bold #e0e7ff")
-		text.append(f"   {shell.mode} mode", style="#9ca3af")
+		text.append("   graded by the server" if ranked else f"   {shell.mode} mode", style="#9ca3af")
 		text.append(f"   grade {display.points(shell.grade)}/100", style="bold #a5b4fc")
 		if shell.started_at is not None:
 			left = shell._time_left()
@@ -584,7 +659,7 @@ class SessionScreen(Screen):
 			self.busy = True
 			event.input.disabled = True
 			self.grade_in_background(command)
-		elif command == "cheat" and not self.practice:
+		elif command == "cheat" and not self.practice and not getattr(self.shell, "ranked", False):
 			# Hidden: the menus of the cheat menu are screens of the app.
 			self.app.cheat_flow(self)
 		else:
@@ -641,16 +716,25 @@ class Pal42App(App):
 	update_check = None
 	updater = staticmethod(apply_update)
 
-	def __init__(self, shell, practice=False, theme=None, user=None):
+	# Where Ranked keeps the login of this terminal, and its server (None:
+	# ~/.42pal/online.json and PAL42_SERVER; the tests give their own).
+	credentials = None
+	server = None
+
+	def __init__(self, shell, practice=False, theme=None, user=None, start=None):
 		super().__init__()
 		self.shell = shell
 		self.practice = practice
 		self.practice_theme = theme
 		self.user = user or getpass.getuser()
+		# "ranked": straight to Ranked (./42pal ranked), no fake login nor menu.
+		self.start = start
 
 	def on_mount(self):
 		if self.practice:
 			self.practice_flow()
+		elif self.start == "ranked":
+			self.ranked_only_flow()
 		else:
 			self.exam_flow()
 
@@ -766,7 +850,12 @@ class Pal42App(App):
 				await self.run_session()
 				return
 		start = await self.choose_start()
-		while start in (PRACTICE, PROGRESS):
+		while start in (PRACTICE, PROGRESS, RANKED):
+			if start == RANKED:
+				if await self.ranked_flow():
+					return
+				start = await self.choose_start()
+				continue
 			practice = self.practice_shell()
 			if start == PROGRESS:
 				theme = await self.ask_progress()
@@ -785,6 +874,109 @@ class Pal42App(App):
 			return
 		self.run_quietly(lambda: shell.begin(*start))
 		await self.run_session()
+
+	@work
+	async def ranked_only_flow(self):
+		"""./42pal ranked: Ranked at once; leaving its menu leaves the app."""
+		if not await self.ranked_flow(first=True):
+			self.exit()
+
+	async def ranked_flow(self, first=False):
+		"""Ranked: log the terminal in if needed, then resume or start a ranked exam.
+
+		Return True once an exam was played (the app is leaving), False to go
+		back to the first menu.
+		"""
+		# Here, not at the top: pal42.online loads for Ranked only.
+		from pal42 import online
+		credentials = self.credentials or online.CREDENTIALS
+		server = self.server or online.server_url()
+		saved = online.load_credentials(credentials)
+		while True:
+			if saved is None or saved["server"] != server:
+				saved = await self.pair_terminal(online, server, credentials)
+				if saved is None:
+					return False
+			catalog, themes = self.shell._catalog()
+			shell = ranked_shell_class()(self.shell.console, None, online.Api(saved["server"], saved["token"]),
+				workspace=self.shell.workspace, catalog=catalog, themes=themes)
+			try:
+				state = await asyncio.to_thread(shell.current_state)
+				me = None if state else (await asyncio.to_thread(shell.api.request, "GET", "/me"))[1]
+				choice = await self.ask_ranked(shell, saved, state, me, first)
+				if choice is BACK:
+					return False
+				if choice == "logout":
+					await asyncio.to_thread(self.log_out, online, shell.api, credentials)
+					self.notify(f"Logged out ({saved['login']}).", timeout=4)
+					return False
+				if state is None:
+					_, state = await asyncio.to_thread(shell.api.request, "POST", "/exams", {"exam": choice.id})
+			except online.OnlineError as error:
+				if error.error == "token":
+					# The token was revoked (the account deleted, a logout elsewhere): log in again.
+					online.delete_credentials(credentials)
+					saved = None
+					self.notify("This terminal is not logged in any more: log in again.", severity="warning")
+					continue
+				self.notify(str(error), severity="error", timeout=10)
+				return False
+			break
+		self.run_quietly(lambda: shell.start_ranked(state))
+		# The ranked shell takes over: the session screen and the end use it.
+		self.shell, self.practice = shell, False
+		await self.run_session()
+		return True
+
+	async def ask_ranked(self, shell, saved, state, me, first):
+		"""The menu of Ranked: resume the exam in progress, or the exams; and Log out."""
+		who = saved["login"] + (f" · {saved['campus']}" if saved.get("campus") else "")
+		if state is not None:
+			items = [("resume", "Resume your ranked exam",
+				f"{state['title']} · level {state['level']} · {display.duration(state['seconds_left'])} left",
+				"The server kept it, and its time kept running.")]
+		else:
+			audience = "piscine" if (me or {}).get("kind") == "pool" else "student"
+			items = [(exam, exam.title, display.exam_summary(exam),
+				"Drawn, timed and graded by the 42pal server; your place in the leaderboard.")
+				for exam in shell._exams() if exam.audience == audience]
+		items.append(("logout", "Log out", "this terminal",
+			"Forget the login of this terminal: log in again next time."))
+		return await self.ask(f"Ranked · {who}", items, first, subtitle="42pal online · graded by the server")
+
+	async def pair_terminal(self, online, server, credentials):
+		"""The 42 login of this terminal, on its screen; return the login kept, or None."""
+		api = online.Api(server)
+		try:
+			pairing = await asyncio.to_thread(online.start_pairing, api)
+		except online.OnlineError as error:
+			self.notify(str(error), severity="error", timeout=10)
+			return None
+		screen = PairingScreen(pairing)
+		await self.push_screen(screen)
+		if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY") or sys.platform == "darwin":
+			self.action_open_link(pairing["login_url"])
+		try:
+			answer = await asyncio.to_thread(online.wait_for_token, api, pairing, screen.wait)
+		except LoginStopped:
+			return None
+		except online.OnlineError as error:
+			self.notify(str(error), severity="error", timeout=10)
+			return None
+		finally:
+			self.pop_screen()
+		online.save_credentials(credentials, server, answer)
+		self.notify(f"Logged in as {answer['login']}.", timeout=4)
+		return online.load_credentials(credentials)
+
+	@staticmethod
+	def log_out(online, api, credentials):
+		"""Revoke the token on the server when it can be reached, then forget it."""
+		try:
+			api.request("POST", "/logout")
+		except online.OnlineError:
+			pass
+		online.delete_credentials(credentials)
 
 	def practice_shell(self):
 		"""A practice shell with the console, workspace and catalog of the examshell."""
@@ -855,7 +1047,7 @@ class Pal42App(App):
 		shown = []
 		while len(chosen) < len(steps):
 			answer, asked = await steps[len(chosen)](chosen, not any(shown))
-			if answer in (PRACTICE, PROGRESS):
+			if answer in (PRACTICE, PROGRESS, RANKED):
 				return answer
 			if answer is BACK:
 				if not any(shown):
@@ -886,8 +1078,7 @@ class Pal42App(App):
 		if self.shell.store and self.shell.store.grades():
 			items.append((PROGRESS, display.PROGRESS_TEXT, display.PROGRESS_SUMMARY,
 				"How your exams went, and the themes that fail the most, to practise them."))
-		if len(items) == 1:
-			return items[0][0], False
+		items.append((RANKED, display.RANKED_TEXT, display.RANKED_SUMMARY, display.RANKED_DETAILS))
 		return await self.ask(display.FIRST_MENU_TITLE, items, first), True
 
 	async def pick_exam(self, chosen, first):
@@ -974,6 +1165,15 @@ def finish_in_terminal(final, shell, practice=False):
 	if final is RESTART:
 		console.print("42pal is updated: it starts again.")
 		restart()
+	if getattr(shell, "ranked", False):
+		# Left before the end: the snapshots stop, the server keeps the exam.
+		shell.snapshots.stop()
+		if final:
+			console.print(Text.from_ansi(final.rstrip("\n")))
+		elif shell.variant is not None:
+			console.print("Ranked exam stopped: the server keeps it, and its time runs. "
+				"Choose Ranked in ./42pal to resume it.")
+		return
 	if final:
 		console.print(Text.from_ansi(final.rstrip("\n")))
 	elif not practice and shell.variant is not None and shell.store and shell.store.load():
@@ -990,6 +1190,14 @@ def run_exam(workspace, store, update_check=None):
 	final = app.run()
 	# Practice chosen in the first menu: the app ends with the practice shell.
 	finish_in_terminal(final, app.shell, practice=app.practice)
+	return 0
+
+def run_ranked(workspace):
+	"""./42pal ranked in full screen: straight to Ranked; return the exit code."""
+	shell = ScreenShell(capture_console(), None, None, workspace=workspace, store=SessionStore())
+	app = Pal42App(shell, start="ranked")
+	final = app.run()
+	finish_in_terminal(final, app.shell)
 	return 0
 
 def run_practice(workspace, theme=None):

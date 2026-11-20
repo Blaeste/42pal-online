@@ -211,16 +211,25 @@ A passed `grademe` (`g`) gives the next subject; `next` (`n`) skips to
 another one; `finish` (`f`) stops. It opens full screen too, unless `--plain`
 is given.
 
-## Log in for the ranked mode (being built)
+## Ranked: 42pal online (being built)
+
+**Ranked** is the last choice of the first menu of `./42pal`, next to the
+exams and practice. The first time, the terminal logs in with your 42
+account: it shows a link and a code, and opens the browser when there is a
+screen. Log in with 42 there, accept the privacy policy the first time,
+and check that the page shows the same code before you confirm. Then
+choose an exam, or resume the one in progress: the server draws the
+subjects, keeps the time and the waits, and grades your rendu again after
+your `grademe` shows the trace here. The menu of Ranked logs the terminal
+out too.
+
+The same from the command line:
 
 ```sh
 ./42pal login
 ```
 
-The terminal prints a link and a code, and opens the browser when there is
-a screen. Log in with 42 there, accept the privacy policy the first time,
-and check that the page shows the same code before you confirm: the
-terminal is then logged in. Active students of the 42 cursus, piscineux of a
+logs the terminal in. Active students of the 42 cursus, piscineux of a
 C piscine in progress and alumni can log in; the offline modes stay open to
 everyone and never touch the network.
 
@@ -228,16 +237,12 @@ everyone and never touch the network.
 ./42pal logout
 ```
 
-Once logged in:
-
 ```sh
 ./42pal ranked
 ```
 
-starts a ranked exam (of the piscine for a piscineux, of the cursus for
-the others), or resumes the one in progress: the
-server draws the subjects, keeps the time and the waits, and grades your
-rendu again with tests of its own after your `grademe` shows the trace here.
+opens Ranked directly, and logs the terminal in first if needed. A
+piscineux gets the exams of the piscine, the others those of the cursus.
 
 ```sh
 ./42pal leaderboard            # the global score of the season

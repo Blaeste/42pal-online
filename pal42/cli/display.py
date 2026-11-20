@@ -276,8 +276,14 @@ PRACTICE_SUMMARY = "one theme, no timer"
 PROGRESS_TEXT = "Progress"
 PROGRESS_SUMMARY = "your exams and weak themes"
 
-def audience_menu(exams_by_audience, first=True, practice=False, progress=False):
-	"""The first menu: the exams of the piscine or of the students, then practice and progress."""
+# The choice of the first menu for 42pal online: ranked exams, graded by the server.
+RANKED_TEXT = "Ranked"
+RANKED_SUMMARY = "42pal online · leaderboard"
+RANKED_DETAILS = ("Exams drawn, timed and graded by the 42pal server, and your place in the leaderboard: "
+	"log in with your 42 account.")
+
+def audience_menu(exams_by_audience, first=True, practice=False, progress=False, ranked=False):
+	"""The first menu: the exams of the piscine or of the students, then practice, progress, ranked."""
 	lines = [FIRST_MENU_TITLE]
 	for number, (audience, exams) in enumerate(exams_by_audience.items(), start=1):
 		leads_to = exams[0].title if len(exams) == 1 else f"{len(exams)} exams"
@@ -289,6 +295,9 @@ def audience_menu(exams_by_audience, first=True, practice=False, progress=False)
 	if progress:
 		count += 1
 		lines.append(f"  {count}. {PROGRESS_TEXT:22}{PROGRESS_SUMMARY}")
+	if ranked:
+		count += 1
+		lines.append(f"  {count}. {RANKED_TEXT:22}{RANKED_SUMMARY}")
 	return lines + [last_choice(count + 1, first)]
 
 def progress_summary(text):

@@ -73,6 +73,8 @@ BACK = object()
 # The choices of the first menu that lead to practice, or to the progress, instead of an exam.
 PRACTICE = "practice"
 PROGRESS = "progress"
+# Ranked, in the first menu: 42pal online (pal42.cli.ranked).
+RANKED = "ranked"
 
 class Shell:
 	"""One exam session in the terminal.
@@ -111,6 +113,10 @@ class Shell:
 		self.restart = False
 		# The encrypted cheat menu: cheat.PACK unless a test gives its own.
 		self.cheat_pack = None
+		# Where Ranked keeps the login of this terminal, and its server
+		# (None: ~/.42pal/online.json and PAL42_SERVER; the tests give theirs).
+		self.online_credentials = None
+		self.online_server = None
 
 	def _reset(self):
 		"""No exam in progress: the state before an exam starts."""
@@ -145,10 +151,14 @@ class Shell:
 				return
 			if not self.resume():
 				start = self.choose_start()
-				while start in (PRACTICE, PROGRESS):
-					theme = self.show_progress() if start == PROGRESS else None
-					if (start == PRACTICE or theme is not None) and self.practise(theme):
-						return
+				while start in (PRACTICE, PROGRESS, RANKED):
+					if start == RANKED:
+						if self.play_ranked():
+							return
+					else:
+						theme = self.show_progress() if start == PROGRESS else None
+						if (start == PRACTICE or theme is not None) and self.practise(theme):
+							return
 					start = self.choose_start()
 				if start is None:
 					self.console.print("Goodbye!")
@@ -281,7 +291,7 @@ class Shell:
 					chosen.pop()
 				chosen.pop()
 				continue
-			if answer in (PRACTICE, PROGRESS):
+			if answer in (PRACTICE, PROGRESS, RANKED):
 				return answer
 			chosen.append(answer)
 			shown.append(self.menus_shown > menus_before)
@@ -300,14 +310,25 @@ class Shell:
 			if audience in by_audience}
 		choices = list(by_audience) + ([PRACTICE] if self._can_practise() else [])
 		choices += [PROGRESS] if self.store and self.store.grades() else []
-		if len(choices) == 1:
-			return choices[0]
+		choices.append(RANKED)
 		self._print_lines(display.audience_menu(by_audience, first, practice=PRACTICE in choices,
-			progress=PROGRESS in choices))
+			progress=PROGRESS in choices, ranked=True))
 		last = len(choices) + 1
 		number = self._ask_choice("Your choice:", range(1, last + 1))
 		self.console.print()
 		return BACK if number == last else choices[number - 1]
+
+	def play_ranked(self):
+		"""Ranked, chosen in the first menu: log in if needed, then a ranked exam.
+
+		Return True once an exam was played (the session is over), False to
+		go back to the first menu. pal42.online is loaded here only: the
+		offline modes never touch the network.
+		"""
+		from pal42.cli.ranked import from_menu
+		catalog, themes = self._catalog()
+		return from_menu(self.console, self.ask, self.workspace, catalog, themes,
+			credentials=self.online_credentials, server=self.online_server)
 
 	def _can_practise(self):
 		"""Practice is offered when the catalog has exercises."""

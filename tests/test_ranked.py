@@ -40,6 +40,8 @@ class FakeServer(BaseHTTPRequestHandler):
 	current = None
 	verdict = None
 	kind = "student"
+	# False: the 42 login of a pairing never comes.
+	approve = True
 	requests = []
 
 	def do_GET(self):
@@ -71,12 +73,21 @@ class FakeServer(BaseHTTPRequestHandler):
 		if self.path == "/api/v1/exams/current/snapshots":
 			count = sum(path == self.path for _, path, _ in self.requests)
 			return self.answer(201, {"seq": count, "hash": f"h{count}"})
+		if self.path == "/api/v1/pairings":
+			return self.answer(201, {"device_code": "dev-1", "user_code": "BCDF-GHJK",
+				"login_url": "http://server/pair/BCDF-GHJK", "interval": 1, "expires_in": 600})
+		if self.path == "/api/v1/pairings/token":
+			if not FakeServer.approve:
+				return self.answer(202, {"status": "pending"})
+			return self.answer(200, {"token": "tok-2", "login": "jdoe", "campus": "Mulhouse"})
+		if self.path == "/api/v1/logout":
+			return self.answer(204, None)
 		if self.path == "/api/v1/exams/current/finish":
 			return self.answer(200, state(ended=True, end="finish", seconds=600, attempts=1))
 		self.answer(404, {"error": "unknown", "message": "Unknown."})
 
 	def answer(self, status, body):
-		data = json.dumps(body).encode()
+		data = b"" if body is None else json.dumps(body).encode()
 		self.send_response(status)
 		self.send_header("Content-Type", "application/json")
 		self.send_header("Content-Length", str(len(data)))
@@ -99,6 +110,7 @@ class RankedTestCase(unittest.TestCase):
 		FakeServer.current = None
 		FakeServer.verdict = None
 		FakeServer.kind = "student"
+		FakeServer.approve = True
 		FakeServer.requests = []
 		server = ThreadingHTTPServer(("127.0.0.1", 0), FakeServer)
 		threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -225,9 +237,45 @@ class TestRankedShell(RankedTestCase):
 
 class TestRankedCommand(unittest.TestCase):
 
-	def test_ranked_needs_a_login_first(self):
+	def test_ranked_logs_in_first_and_says_when_it_cannot(self):
+		"""Not logged in: ./42pal ranked logs the terminal in; a server out of reach is said."""
 		with tempfile.TemporaryDirectory() as folder:
 			console = Console(file=io.StringIO(), width=120, color_system=None)
-			code = ranked.main(console=console, credentials=Path(folder) / "online.json")
+			code = ranked.main(console=console, credentials=Path(folder) / "online.json", server="http://127.0.0.1:9")
 		self.assertEqual(code, 1)
-		self.assertIn("./42pal login", console.file.getvalue())
+		self.assertIn("cannot be reached", console.file.getvalue())
+
+class TestRankedInTheFirstMenu(RankedTestCase):
+	"""Ranked is a choice of the first menu of ./42pal (text interface)."""
+
+	def test_ranked_from_the_first_menu_with_a_saved_login(self):
+		from pal42.cli.shell import Shell
+		from pal42.themes import load_themes
+		from tests.test_cli import FakeClock, Script
+		credentials = self.root / "online.json"
+		online.save_credentials(credentials, self.api.server, {"token": "tok-1", "login": "jdoe", "campus": None})
+		# The login, then 4 (Ranked: after the piscine, the students and practice), rank02, finish.
+		script = Script("", "pw", "4", "1", "finish")
+		shell = Shell(self.console, script.ask, script.ask_password, Workspace(self.root / "exam"),
+			clock=FakeClock(), sleep=lambda seconds: None, catalog=CATALOG, themes=load_themes())
+		shell.online_credentials = credentials
+		shell.online_server = self.api.server
+		shell.run()
+		self.assertIn("4. Ranked", self.output())
+		self.assertEqual(self.posted("/api/v1/exams"), [{"exam": "rank02"}])
+		self.assertIn("End of the ranked exam", self.output())
+
+	def test_ranked_without_a_server_goes_back_to_the_first_menu(self):
+		from pal42.cli.shell import Shell
+		from pal42.themes import load_themes
+		from tests.test_cli import FakeClock, Script
+		script = Script("", "pw", "4", "5")
+		shell = Shell(self.console, script.ask, script.ask_password, Workspace(self.root / "exam"),
+			clock=FakeClock(), sleep=lambda seconds: None, catalog=CATALOG, themes=load_themes())
+		shell.online_credentials = self.root / "none.json"
+		shell.online_server = "http://127.0.0.1:9"
+		shell.run()
+		text = self.output()
+		self.assertIn("cannot be reached", text)
+		self.assertEqual(text.count("What do you want to do?"), 2)
+		self.assertIsNone(shell.exam)

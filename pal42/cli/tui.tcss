@@ -104,6 +104,28 @@ LoginScreen Input:focus, PassphraseScreen Input:focus {
 	padding: 0 1;
 }
 
+/* --- the 42 login of 42pal online --------------------------------------- */
+
+.pairing-link {
+	padding: 0 1 1 1;
+	color: #67e8f9;
+}
+
+.pairing-code {
+	width: 100%;
+	content-align: center middle;
+	text-style: bold;
+	color: #e0e7ff;
+	background: #262b45;
+	margin: 0 1 1 1;
+	padding: 1 0;
+}
+
+.pairing-wait {
+	padding: 0 1 1 1;
+	color: #a5b4fc;
+}
+
 /* --- exam and practice ------------------------------------------------- */
 
 SessionScreen {
