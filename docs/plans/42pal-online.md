@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 42, passe un exam dont le serveur tire le sujet, regrade le code et fait foi pour la note, puis apparaît dans un leaderboard par exam, global et par saison, avec des stats par exercice. Un anticheat repère le code collé, copié (d'une ref, d'un oracle ou d'un autre étudiant), écrit par une IA ou rendu dans un temps impossible.
+Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 42, passe un exam dont le serveur tire le sujet, regrade le code et fait foi pour la note, puis apparaît dans un leaderboard par exam et global, par promo, avec des stats par exercice. Un anticheat repère le code collé, copié (d'une ref, d'un oracle ou d'un autre étudiant), écrit par une IA ou rendu dans un temps impossible.
 
 **Le plan est fini quand** un étudiant de n'importe quel campus 42 se connecte depuis `./42pal`, passe un exam classé, voit sa note validée par le serveur et sa place sur le site, et qu'un exam truqué (collé, copié d'une ref, validé en 2 s) est refusé ou mis en revue.
 
@@ -20,7 +20,7 @@ Ajouter à 42pal un **mode classé** : l'étudiant se connecte avec son compte 4
 - **Relecteurs** : l'admin (le propriétaire) et des logins de confiance qu'il nomme. Chaque décision garde qui l'a prise, quand et pourquoi.
 - **Public** : tous les campus 42, leaderboard par campus et global.
 - **Hébergement** : un VPS payant en Europe, conteneurs isolés pour chaque grademe.
-- **Leaderboard** : par exam (meilleure note validée, puis le temps), score global (somme des meilleures notes), saisons qui repartent à zéro avec archive, stats publiques par exercice et par thème, points faibles personnels privés.
+- **Leaderboard** : par exam (meilleure note validée, puis le temps), score global (somme des meilleures notes ; cursus et piscine à part), **par promo** (mois et année de la piscine ; la sienne d'abord, toutes sur demande) et par campus, sans saisons (décidé par le propriétaire le 2026-11-20), stats par exercice et par thème, points faibles personnels privés.
 - **Affichage** : un site web (classements, stats, connexion, revue) et un menu LEADERBOARD dans 42pal. **Le site est réservé aux membres du réseau 42 connectés** : aucune page publique, aucune indexation (CGU de l'API, art. 3 et 4.1).
 - **Vie privée** : mode classé sur consentement écrit (case à cocher, preuve gardée, retrait possible à tout moment) ; le leaderboard montre le login et le campus aux seuls membres 42 connectés ; le code et les instantanés sont effacés après 90 jours (les notes et les temps restent) ; chacun peut voir, exporter et supprimer ses données.
 - **Ce que le programme et le site affichent est en anglais**, comme la v1.
@@ -81,7 +81,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 - 4.1, 4.2 : instantanés toutes les 10 s et juste avant chaque grademe, chaînés par hash, horodatés par le serveur, envois ratés comptés.
 - 5.1, 5.2 : un module par signal (timing, collé, copie par empreintes, style, trous) ; refus des seuls cas nets (niveau validé en quelques secondes, ref recopiée avec ses `#if` de variants), le reste en vérification. 5.3 attend de vraies sessions.
 - 6.1 : file de revue, replay (signaux, instantanés et diffs, grademe), décision avec motif, journal ; admins par `PAL42_ADMINS`, relecteurs nommés sur le site.
-- 7.1 à 7.3 : classements par exam, global, par saison (mois) et par campus ; stats par exercice et par thème ; points faibles personnels ; pages derrière la connexion ; `./42pal leaderboard`.
+- 7.1 à 7.3 : classements par exam et global (cursus et piscine à part), par promo et par campus ; stats par exercice et par thème ; points faibles personnels ; pages derrière la connexion ; `./42pal leaderboard`.
 - 8.1 : code et instantanés effacés après 90 jours, ménage des lignes expirées, export JSON de toutes ses données, `./42pal delete-account`.
 - 8.2 (local) : `deploy/` du serveur, Docker Compose (PostgreSQL, web sur 127.0.0.1:8000, worker qui lance le bac à sable par le socket, sans secret de l'app 42). Pour le VPS : Caddy, domaine, gVisor, chiffrement au repos, sauvegardes, migrations.
 
@@ -129,7 +129,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 
 ### Phase 7 — Leaderboard et stats
 
-- **7.1** Serveur : classement par exam, score global, saisons avec archive, filtre par campus, stats par exercice et par thème, points faibles personnels. *Vérif* : tests sur des jeux de données.
+- **7.1** Serveur : classement par exam, score global, par promo et par campus, stats par exercice et par thème, points faibles personnels. *Vérif* : tests sur des jeux de données.
 - **7.2** Pages web, réservées aux membres 42 connectés (pas de page publique, `noindex`, `robots.txt` qui interdit tout). **7.3** Menu LEADERBOARD dans le client. *Vérif* : une page de classement ouverte sans connexion renvoie vers la connexion ; tests, essai à la main.
 
 ### Phase 8 — Vie privée et mise en ligne
@@ -156,7 +156,7 @@ Chaque étape se fait en TDD dans son dépôt, puis les tests utilisateur (comma
 ## Questions ouvertes (avec la recommandation)
 
 1. **Pile serveur** : Python 3.12, FastAPI, PostgreSQL, templates côté serveur, pour réutiliser le grader tel quel.
-2. **Saisons** : le mois calendaire.
+2. **Saisons** : abandonnées par le propriétaire (2026-11-20) : les classements sont par promo.
 3. **Langue du site** : l'anglais, comme le programme.
 4. **VPS** : réutiliser le VPS OVH du plan de la v1, s'il a la place pour des conteneurs (gVisor demande un noyau qui le permet).
 5. **Qui peut jouer en classé** : **décidé par le propriétaire le 2026-11-20** : étudiants actifs du cursus, piscineux d'une piscine C en cours (comptes `pool`, exams de piscine, score global de la piscine à part) et alumni ; le staff seulement comme relecteur (plus tard). Les CGU de l'API (art. 1) disent que les candidats « n'ont pas accès à l'API » ; lecture du propriétaire : c'est lui qui utilise l'API, les candidats se connectent seulement. À dire à la pédagogie en présentant le projet. Un vrai compte a montré que la date du black hole peut rester dans le passé sur un étudiant actif (42 a supprimé le black hole) : un cursus est en cours jusqu'à sa date de fin seulement.

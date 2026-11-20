@@ -83,7 +83,7 @@ The client keeps the server, the token and the login in `~/.42pal/online.json`, 
 
 ### `GET /api/v1/me`
 
-Who the token belongs to. `200` `{"login": "jdoe", "campus": "Mulhouse", "kind": "student"}`; `kind` is `student` (the cursus), `pool` (a piscine in progress) or `alumni`. `./42pal ranked` offers the piscine exams to `pool`, those of the cursus to the others.
+Who the token belongs to. `200` `{"login": "jdoe", "campus": "Mulhouse", "kind": "student"}`; `kind` is `student` (the cursus), `pool` (a piscine in progress) or `alumni`; the server also keeps the promo (the year and month of the piscine) for the leaderboards. `./42pal ranked` offers the piscine exams to `pool`, those of the cursus to the others.
 
 ### `POST /api/v1/logout`
 
@@ -151,17 +151,17 @@ While a ranked exam runs, the client sends a snapshot every 10 seconds, and a la
 
 ## Leaderboards
 
-### `GET /api/v1/leaderboard?exam=rank02&season=2026-11&campus=Mulhouse`
+### `GET /api/v1/leaderboard?exam=rank02&promo=2024-07&campus=Mulhouse`
 
-Every parameter is optional: without `exam`, the global score (the sum of each student's best grade per exam) of the cursus exams, or of the piscine exams with `audience=piscine`; without `season`, the current one (a calendar month, in UTC); without `campus`, every campus. Validated exams only. `200`:
+Every parameter is optional: without `exam`, the global score (the sum of each student's best grade per exam) of the cursus exams, or of the piscine exams with `audience=piscine`; without `promo`, the promo of the token's student (the year and month of their piscine), `all` for every promo; without `campus`, every campus. Validated exams only, all of them (no seasons). `200`:
 
 ```json
-{"season": "2026-11", "exam": "rank02", "audience": null, "campus": null,
+{"exam": "rank02", "audience": null, "promo": "2024-07", "campus": null,
  "rows": [{"rank": 1, "login": "jdoe", "campus": "Mulhouse", "grade": 75, "seconds": 6000}]}
 ```
 
-Per exam, the best grade of each student, then the shortest time (`seconds`); students with the same grade and time share their rank. `seconds` is `null` in the global score. `./42pal leaderboard [EXAM] [--season S] [--campus C] [--piscine]` shows it; the site shows it too, to logged-in members only.
+Per exam, the best grade of each student, then the shortest time (`seconds`); students with the same grade and time share their rank. `seconds` is `null` in the global score; `promo` is `null` for every promo. `./42pal leaderboard [EXAM] [--promo P|all] [--campus C] [--piscine]` shows it; the site shows it too, to logged-in members only.
 
 ## Who may play ranked
 
-The server reads `/v2/me` on the intra and lets in the active accounts of the 42 cursus (`student`), of a C piscine in progress (`pool`, the owner's choice) and the alumni; staff accounts and former students who are not alumni get `refused`. A cursus is in progress until its end date: 42 dropped the black hole, whose date can stay in the past on an active student. The offline modes stay open to everyone. The server keeps the 42 id, the login, the primary campus and the kind of account: nothing else from the intra (no email, no name, no picture).
+The server reads `/v2/me` on the intra and lets in the active accounts of the 42 cursus (`student`), of a C piscine in progress (`pool`, the owner's choice) and the alumni; staff accounts and former students who are not alumni get `refused`. A cursus is in progress until its end date: 42 dropped the black hole, whose date can stay in the past on an active student. The offline modes stay open to everyone. The server keeps the 42 id, the login, the primary campus, the kind of account and the promo: nothing else from the intra (no email, no name, no picture).

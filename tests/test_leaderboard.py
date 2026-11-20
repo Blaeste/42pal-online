@@ -27,8 +27,9 @@ class FakeServer(BaseHTTPRequestHandler):
 		query = {key: values[0] for key, values in parse_qs(parts.query).items()}
 		self.asked.append((parts.path, query, self.headers.get("Authorization")))
 		audience = None if query.get("exam") else query.get("audience", "student")
-		body = {"season": query.get("season", "2026-11"), "exam": query.get("exam"), "audience": audience,
-			"campus": query.get("campus"),
+		# The promo of the token's student by default; all: every promo.
+		promo = None if query.get("promo") == "all" else query.get("promo", "2024-07")
+		body = {"exam": query.get("exam"), "audience": audience, "promo": promo, "campus": query.get("campus"),
 			"rows": ROWS if query.get("exam") else [dict(row, seconds=None) for row in ROWS]}
 		data = json.dumps(body).encode()
 		self.send_response(200)
@@ -52,22 +53,28 @@ class TestLeaderboard(unittest.TestCase):
 		self.console = Console(file=io.StringIO(), width=120, color_system=None)
 
 	def test_the_leaderboard_of_an_exam(self):
-		self.assertEqual(leaderboard.show(self.console, self.api, exam="rank02", season="2026-11", campus="Paris"), 0)
+		self.assertEqual(leaderboard.show(self.console, self.api, exam="rank02", promo="2023-09", campus="Paris"), 0)
 		path, query, authorization = FakeServer.asked[0]
 		self.assertEqual((path, query, authorization),
-			("/api/v1/leaderboard", {"exam": "rank02", "season": "2026-11", "campus": "Paris"}, "Bearer tok-1"))
+			("/api/v1/leaderboard", {"exam": "rank02", "promo": "2023-09", "campus": "Paris"}, "Bearer tok-1"))
 		text = self.console.file.getvalue()
 		self.assertIn("rank02", text)
-		self.assertIn("2026-11", text)
+		self.assertIn("September 2023", text)
 		self.assertRegex(text, r"1\s+│?\s*bob\s+│?\s*Paris\s+│?\s*75")
 		self.assertIn("1:40:00", text)
 
-	def test_the_global_score_has_no_time(self):
+	def test_the_global_score_of_the_student_s_promo_has_no_time(self):
 		leaderboard.show(self.console, self.api)
 		self.assertEqual(FakeServer.asked[0][1], {})
 		text = self.console.file.getvalue()
-		self.assertIn("Global score", text)
+		self.assertIn("Global score of the cursus", text)
+		self.assertIn("July 2024", text)
 		self.assertNotIn("1:40:00", text)
+
+	def test_every_promo(self):
+		leaderboard.show(self.console, self.api, exam="rank02", promo="all")
+		self.assertEqual(FakeServer.asked[0][1], {"exam": "rank02", "promo": "all"})
+		self.assertIn("every promo", self.console.file.getvalue())
 
 	def test_the_global_score_of_the_piscine(self):
 		leaderboard.show(self.console, self.api, audience="piscine")

@@ -245,10 +245,10 @@ opens Ranked directly, and logs the terminal in first if needed. A
 piscineux gets the exams of the piscine, the others those of the cursus.
 
 ```sh
-./42pal leaderboard            # the global score of the season
-./42pal leaderboard rank02     # the leaderboard of one exam
-./42pal leaderboard rank02 --campus Mulhouse --season 2026-11
-./42pal leaderboard --piscine  # the global score of the piscine exams
+./42pal leaderboard            # the global score of your promo
+./42pal leaderboard rank02     # the leaderboard of one exam, in your promo
+./42pal leaderboard rank02 --promo all --campus Mulhouse
+./42pal leaderboard --promo 2024-07 --piscine  # the piscine exams of the July 2024 promo
 ```
 
 The token of the terminal is kept in `~/.42pal/online.json`, readable by
