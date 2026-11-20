@@ -8,6 +8,7 @@ import io
 import json
 import tempfile
 import threading
+import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -183,6 +184,30 @@ class TestRankedShell(RankedTestCase):
 		name = CATALOG.variant(FIRST).expected_files[0]
 		sent = [body["files"] for body in self.posted("/api/v1/exams/current/snapshots")]
 		self.assertIn({name: "int\tmain(void);\n"}, sent)
+
+	def test_a_snapshot_of_the_rendu_goes_just_before_each_grademe(self):
+		"""The rendu is written after the first snapshot: only the one before grademe can hold it."""
+		FakeServer.verdict = {"status": "done", "passed": False, "trace": "KO", "tests_passed": 0, "tests_total": 1,
+			"exam": state(failures=1, wait_seconds=30, attempts=1)}
+		answers = ["1", "grademe"]
+
+		def ask(prompt, default=None):
+			if prompt == "examshell>" and answers == ["grademe"]:
+				deadline = time.monotonic() + 5
+				while not self.posted("/api/v1/exams/current/snapshots") and time.monotonic() < deadline:
+					time.sleep(0.01)
+				self.hand_in(FIRST, right_rendu(FIRST))
+			if not answers:
+				raise EOFError
+			return answers.pop(0)
+
+		ranked.RankedShell(self.console, ask, self.api, workspace=Workspace(self.root), sleep=lambda seconds: None,
+			catalog=CATALOG).run()
+		posts = [(path, body) for method, path, body in FakeServer.requests if method == "POST"]
+		grademe = [path for path, _ in posts].index("/api/v1/exams/current/grademe")
+		name = CATALOG.variant(FIRST).expected_files[0]
+		before = [body["files"] for path, body in posts[:grademe] if path == "/api/v1/exams/current/snapshots"]
+		self.assertIn({name: right_rendu(FIRST)}, before)
 
 	def test_the_cheat_menu_is_off(self):
 		self.run_shell("1", "cheat")

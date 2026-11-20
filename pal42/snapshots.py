@@ -29,11 +29,17 @@ class Snapshots:
 		# Sends that failed since the last one the server kept.
 		self.missed = 0
 		self.over = False
+		# The thread and the shell (before a grademe) both send: one at a time.
+		self._lock = threading.Lock()
 		self._stop = threading.Event()
 		self._thread = None
 
 	def send_once(self):
 		"""Send one snapshot; return True if the server kept it."""
+		with self._lock:
+			return self._send()
+
+	def _send(self):
 		variant, files = self.read_rendu()
 		changed = {name: content for name, content in files.items() if self.acknowledged.get((variant, name)) != content}
 		body = {"seq": self.seq + 1, "previous": self.last_hash, "variant": variant, "files": changed,

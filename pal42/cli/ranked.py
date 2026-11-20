@@ -108,6 +108,8 @@ class RankedShell(Shell):
 			return False
 		self.console.print(display.retry_preview(self.retry.wait_after(self.failures + 1)))
 		local = self._grade_and_show(self.exam.compile_command)
+		# The rendu handed in is in the snapshots too, even between two ticks.
+		self.snapshots.send_once()
 		try:
 			verdict = self._server_verdict(local.passed)
 		except online.OnlineError as error:
